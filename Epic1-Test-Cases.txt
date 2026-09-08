@@ -1,0 +1,76 @@
+EPIC #1 TEST RUN - SCRUM-7 THROUGH SCRUM-10
+
+Run date: September 8, 2026
+
+HOW THE TESTS WERE RUN
+
+1. Started Docker.
+2. Opened the repository in a terminal.
+3. Compiled the program with:
+   cobc -x -o InCollege InCollege.cob
+4. Copied each test input into InCollege-Input.txt.
+5. Ran the program with:
+   ./InCollege
+6. Saved the actual output for each run.
+7. Compared the screen output with InCollege-Output.txt.
+
+Every screen and file comparison matched exactly.
+
+SCRUM-7 - CREATE INCOLLEGE ACCOUNT
+
+Test 7.1 - Valid account
+Input: newuser and Strong12!
+Expected: The account is created.
+Result: PASS
+
+Test 7.2 - Duplicate username
+Input: Create newuser, then try newuser again.
+Expected: The second username is rejected.
+Result: PASS
+
+Test 7.3 - Password boundaries
+Input: One 8-character password and one 12-character password.
+Expected: Both passwords are accepted.
+Result: PASS
+
+Test 7.4 - Invalid passwords
+Input: A short password, long password, no capital letter, no digit, and no special character.
+Expected: Every invalid password is rejected.
+Result: PASS
+
+Files:
+Epic1-Story7-Test-Input.zip
+Epic1-Story7-Test-Output.zip
+
+SCRUM-8 - LOG IN TO EXISTING ACCOUNT
+
+Test 8.1 - Login checks
+Input: Correct login, wrong password, and unknown username.
+Expected: The correct login succeeds. The two incorrect logins are rejected.
+Result: PASS
+
+Files:
+Epic1-Story8-Test-Input.zip
+Epic1-Story8-Test-Output.zip
+
+SCRUM-9 - PERSIST USER ACCOUNTS
+
+Test 9.1 - Accounts remain after restart
+Input: Create two accounts, restart the program, and log in to both accounts.
+Expected: Both saved accounts can log in after the restart.
+Result: PASS
+
+Files:
+Epic1-Story9-Test-Input.zip
+Epic1-Story9-Test-Output.zip
+
+SCRUM-10 - ENFORCE FIVE ACCOUNT LIMIT
+
+Test 10.1 - Five account limit
+Input: Create five accounts, try a sixth account, restart, and try again.
+Expected: The first five accounts are accepted. The sixth account is rejected before and after restart.
+Result: PASS
+
+Files:
+Epic1-Story10-Test-Input.zip
+Epic1-Story10-Test-Output.zip
