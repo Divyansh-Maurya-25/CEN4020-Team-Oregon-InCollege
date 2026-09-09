@@ -358,23 +358,23 @@ SKILL-MENU.
             TO WS-MESSAGE
         PERFORM SHOW-TEXT
 
-        MOVE "1. COBOL Programming"
+        MOVE "1. Python"
             TO WS-MESSAGE
         PERFORM SHOW-TEXT
 
-        MOVE "2. Resume Writing"
+        MOVE "2. Java"
             TO WS-MESSAGE
         PERFORM SHOW-TEXT
 
-        MOVE "3. Interview Skills"
+        MOVE "3. Cybersecurity"
             TO WS-MESSAGE
         PERFORM SHOW-TEXT
 
-        MOVE "4. Git and GitHub"
+        MOVE "4. Data Science"
             TO WS-MESSAGE
         PERFORM SHOW-TEXT
 
-        MOVE "5. Team Communication"
+        MOVE "5. Web Development"
             TO WS-MESSAGE
         PERFORM SHOW-TEXT
 
@@ -419,4 +419,3 @@ SKILL-MENU.
         END-IF
 
     END-PERFORM.
-    
