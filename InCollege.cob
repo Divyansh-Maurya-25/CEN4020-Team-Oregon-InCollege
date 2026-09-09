@@ -1,0 +1,421 @@
+       >>SOURCE FORMAT IS FREE
+IDENTIFICATION DIVISION.
+PROGRAM-ID. IN-COLLEGE.
+
+ENVIRONMENT DIVISION.
+INPUT-OUTPUT SECTION.
+FILE-CONTROL.
+    SELECT INPUT-FILE ASSIGN TO "InCollege-Input.txt"
+        ORGANIZATION IS LINE SEQUENTIAL
+        FILE STATUS IS WS-INPUT-STATUS.
+    SELECT OUTPUT-FILE ASSIGN TO "InCollege-Output.txt"
+        ORGANIZATION IS LINE SEQUENTIAL.
+    SELECT OPTIONAL ACCOUNT-FILE ASSIGN TO "accounts.dat"
+        ORGANIZATION IS LINE SEQUENTIAL
+        FILE STATUS IS WS-ACCOUNT-STATUS.
+
+DATA DIVISION.
+FILE SECTION.
+FD INPUT-FILE.
+01 INPUT-RECORD PIC X(100).
+
+FD OUTPUT-FILE.
+01 OUTPUT-RECORD PIC X(100).
+
+FD ACCOUNT-FILE.
+01 ACCOUNT-RECORD.
+    05 ACCOUNT-RECORD-USERNAME PIC X(20).
+    05 ACCOUNT-RECORD-PASSWORD PIC X(12).
+
+WORKING-STORAGE SECTION.
+01 WS-INPUT-STATUS PIC XX VALUE SPACES.
+01 WS-ACCOUNT-STATUS PIC XX VALUE SPACES.
+01 WS-END-INPUT PIC X VALUE "N".
+01 WS-END-ACCOUNTS PIC X VALUE "N".
+01 WS-ACCOUNT-COUNT PIC 9 VALUE 0.
+01 WS-ACCOUNT-INDEX PIC 9 VALUE 0.
+01 WS-ACCOUNT-FOUND PIC X VALUE "N".
+01 WS-PASSWORD-OK PIC X VALUE "N".
+01 WS-HAS-CAPITAL PIC X VALUE "N".
+01 WS-HAS-DIGIT PIC X VALUE "N".
+01 WS-HAS-SPECIAL PIC X VALUE "N".
+01 WS-PASSWORD-LENGTH PIC 99 VALUE 0.
+01 WS-CHAR-INDEX PIC 99 VALUE 0.
+01 WS-CHARACTER PIC X VALUE SPACE.
+01 WS-CHOICE PIC X VALUE SPACE.
+01 WS-USERNAME PIC X(20) VALUE SPACES.
+01 WS-PASSWORD PIC X(12) VALUE SPACES.
+01 WS-MESSAGE PIC X(100) VALUE SPACES.
+01 WS-ACCOUNTS.
+    05 WS-ACCOUNT OCCURS 5 TIMES.
+        10 WS-SAVED-USERNAME PIC X(20).
+        10 WS-SAVED-PASSWORD PIC X(12).
+
+01 WS-POST-LOGIN-OPTION PIC X VALUE SPACE.
+
+01 WS-SKILL-MENU-OPTION PIC X VALUE SPACE.
+
+01 WS-EXIT-SKILL-MENU PIC X VALUE "N".
+
+PROCEDURE DIVISION.
+MAIN.
+    *> Open the files.
+    OPEN INPUT INPUT-FILE
+    IF WS-INPUT-STATUS NOT = "00"
+        DISPLAY "Could not open InCollege-Input.txt"
+        STOP RUN
+    END-IF
+
+    OPEN OUTPUT OUTPUT-FILE
+    PERFORM LOAD-ACCOUNTS
+
+    PERFORM UNTIL WS-END-INPUT = "Y"
+        PERFORM SHOW-MENU
+        PERFORM READ-INPUT
+
+        IF WS-END-INPUT = "N"
+            MOVE INPUT-RECORD(1:1) TO WS-CHOICE
+
+            EVALUATE WS-CHOICE
+                WHEN "1"
+                    PERFORM LOGIN
+                WHEN "2"
+                    PERFORM CREATE-ACCOUNT
+                WHEN OTHER
+                    MOVE "Please enter 1 or 2." TO WS-MESSAGE
+                    PERFORM SHOW-TEXT
+            END-EVALUATE
+        END-IF
+    END-PERFORM
+
+    MOVE "--- END_OF_PROGRAM_EXECUTION ---" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    CLOSE INPUT-FILE OUTPUT-FILE
+    STOP RUN.
+
+SHOW-MENU.
+    MOVE "Welcome to InCollege!" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    MOVE "1. Log In" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    MOVE "2. Create New Account" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    MOVE "Enter your choice:" TO WS-MESSAGE
+    PERFORM SHOW-TEXT.
+
+CREATE-ACCOUNT.
+    IF WS-ACCOUNT-COUNT >= 5
+        MOVE "All permitted accounts have been created, please come back later"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+    ELSE
+        MOVE "Please enter your username:" TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+        PERFORM READ-INPUT
+
+        IF WS-END-INPUT = "N"
+            MOVE INPUT-RECORD TO WS-USERNAME
+            PERFORM FIND-USERNAME
+
+            IF WS-ACCOUNT-FOUND = "Y"
+                MOVE "That username already exists, please try again"
+                    TO WS-MESSAGE
+                PERFORM SHOW-TEXT
+            ELSE
+                MOVE "Please enter your password:" TO WS-MESSAGE
+                PERFORM SHOW-TEXT
+                PERFORM READ-INPUT
+
+                IF WS-END-INPUT = "N"
+                    PERFORM CHECK-PASSWORD
+
+                    IF WS-PASSWORD-OK = "Y"
+                        MOVE INPUT-RECORD TO WS-PASSWORD
+                        PERFORM SAVE-ACCOUNT
+                        MOVE "Account created successfully" TO WS-MESSAGE
+                        PERFORM SHOW-TEXT
+                    ELSE
+                        MOVE "Password must be 8-12 characters and include a capital letter, digit, and special character"
+                            TO WS-MESSAGE
+                        PERFORM SHOW-TEXT
+                    END-IF
+                END-IF
+            END-IF
+        END-IF
+    END-IF.
+
+LOGIN.
+    MOVE "N" TO WS-ACCOUNT-FOUND
+
+    PERFORM UNTIL WS-ACCOUNT-FOUND = "Y" OR WS-END-INPUT = "Y"
+        MOVE "Please enter your username:" TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+        PERFORM READ-INPUT
+
+        IF WS-END-INPUT = "N"
+            MOVE INPUT-RECORD TO WS-USERNAME
+            MOVE "Please enter your password:" TO WS-MESSAGE
+            PERFORM SHOW-TEXT
+            PERFORM READ-INPUT
+        END-IF
+
+        IF WS-END-INPUT = "N"
+            MOVE INPUT-RECORD TO WS-PASSWORD
+            PERFORM CHECK-LOGIN
+
+            IF WS-ACCOUNT-FOUND = "Y"
+                MOVE "You have successfully logged in" TO WS-MESSAGE
+                PERFORM SHOW-TEXT
+                *> Show navigation options after successful login
+                PERFORM POST-LOGIN-MENU
+            ELSE
+                MOVE "Incorrect username/password, please try again"
+                    TO WS-MESSAGE
+                PERFORM SHOW-TEXT
+            END-IF
+        END-IF
+    END-PERFORM.
+
+LOAD-ACCOUNTS.
+    *> Load saved accounts.
+    MOVE 0 TO WS-ACCOUNT-COUNT
+    MOVE "N" TO WS-END-ACCOUNTS
+    OPEN INPUT ACCOUNT-FILE
+
+    IF WS-ACCOUNT-STATUS = "00" OR WS-ACCOUNT-STATUS = "05"
+        PERFORM UNTIL WS-END-ACCOUNTS = "Y" OR WS-ACCOUNT-COUNT >= 5
+            READ ACCOUNT-FILE
+                AT END
+                    MOVE "Y" TO WS-END-ACCOUNTS
+                NOT AT END
+                    ADD 1 TO WS-ACCOUNT-COUNT
+                    MOVE ACCOUNT-RECORD-USERNAME
+                        TO WS-SAVED-USERNAME(WS-ACCOUNT-COUNT)
+                    MOVE ACCOUNT-RECORD-PASSWORD
+                        TO WS-SAVED-PASSWORD(WS-ACCOUNT-COUNT)
+            END-READ
+        END-PERFORM
+        CLOSE ACCOUNT-FILE
+    END-IF.
+
+SAVE-ACCOUNT.
+    *> Save the account.
+    ADD 1 TO WS-ACCOUNT-COUNT
+    MOVE WS-USERNAME TO WS-SAVED-USERNAME(WS-ACCOUNT-COUNT)
+    MOVE WS-PASSWORD TO WS-SAVED-PASSWORD(WS-ACCOUNT-COUNT)
+    MOVE WS-USERNAME TO ACCOUNT-RECORD-USERNAME
+    MOVE WS-PASSWORD TO ACCOUNT-RECORD-PASSWORD
+
+    OPEN EXTEND ACCOUNT-FILE
+    WRITE ACCOUNT-RECORD
+    CLOSE ACCOUNT-FILE.
+
+FIND-USERNAME.
+    MOVE "N" TO WS-ACCOUNT-FOUND
+    PERFORM VARYING WS-ACCOUNT-INDEX FROM 1 BY 1
+        UNTIL WS-ACCOUNT-INDEX > WS-ACCOUNT-COUNT
+        IF WS-USERNAME = WS-SAVED-USERNAME(WS-ACCOUNT-INDEX)
+            MOVE "Y" TO WS-ACCOUNT-FOUND
+        END-IF
+    END-PERFORM.
+
+CHECK-LOGIN.
+    MOVE "N" TO WS-ACCOUNT-FOUND
+    PERFORM VARYING WS-ACCOUNT-INDEX FROM 1 BY 1
+        UNTIL WS-ACCOUNT-INDEX > WS-ACCOUNT-COUNT
+        IF WS-USERNAME = WS-SAVED-USERNAME(WS-ACCOUNT-INDEX)
+            AND WS-PASSWORD = WS-SAVED-PASSWORD(WS-ACCOUNT-INDEX)
+            MOVE "Y" TO WS-ACCOUNT-FOUND
+        END-IF
+    END-PERFORM.
+
+CHECK-PASSWORD.
+    *> Check the password rules.
+    MOVE "N" TO WS-PASSWORD-OK WS-HAS-CAPITAL WS-HAS-DIGIT WS-HAS-SPECIAL
+    COMPUTE WS-PASSWORD-LENGTH = FUNCTION LENGTH(FUNCTION TRIM(INPUT-RECORD))
+
+    IF WS-PASSWORD-LENGTH >= 8 AND WS-PASSWORD-LENGTH <= 12
+        PERFORM VARYING WS-CHAR-INDEX FROM 1 BY 1
+            UNTIL WS-CHAR-INDEX > WS-PASSWORD-LENGTH
+            MOVE INPUT-RECORD(WS-CHAR-INDEX:1) TO WS-CHARACTER
+
+            EVALUATE TRUE
+                WHEN WS-CHARACTER >= "A" AND WS-CHARACTER <= "Z"
+                    MOVE "Y" TO WS-HAS-CAPITAL
+                WHEN WS-CHARACTER >= "0" AND WS-CHARACTER <= "9"
+                    MOVE "Y" TO WS-HAS-DIGIT
+                WHEN WS-CHARACTER >= "a" AND WS-CHARACTER <= "z"
+                    CONTINUE
+                WHEN OTHER
+                    MOVE "Y" TO WS-HAS-SPECIAL
+            END-EVALUATE
+        END-PERFORM
+    END-IF
+
+    IF WS-PASSWORD-LENGTH >= 8 AND WS-PASSWORD-LENGTH <= 12
+        AND WS-HAS-CAPITAL = "Y"
+        AND WS-HAS-DIGIT = "Y"
+        AND WS-HAS-SPECIAL = "Y"
+        MOVE "Y" TO WS-PASSWORD-OK
+    END-IF.
+
+READ-INPUT.
+    READ INPUT-FILE
+        AT END
+            MOVE "Y" TO WS-END-INPUT
+        NOT AT END
+            MOVE INPUT-RECORD TO WS-MESSAGE
+            PERFORM SHOW-TEXT
+    END-READ.
+
+SHOW-TEXT.
+    DISPLAY FUNCTION TRIM(WS-MESSAGE)
+    MOVE WS-MESSAGE TO OUTPUT-RECORD
+    WRITE OUTPUT-RECORD
+    MOVE SPACES TO WS-MESSAGE.
+
+*> Main menu after a successful login.
+POST-LOGIN-MENU.
+
+    PERFORM UNTIL WS-END-INPUT = "Y"
+
+        MOVE "1. Search for a job"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "2. Find someone you know"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "3. Learn a new skill"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "4. Logout"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "Enter your choice:"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        PERFORM READ-INPUT
+
+        IF WS-END-INPUT = "N"
+
+            MOVE INPUT-RECORD(1:1)
+                TO WS-POST-LOGIN-OPTION
+
+            EVALUATE WS-POST-LOGIN-OPTION
+
+                WHEN "1"
+                    PERFORM JOB-SEARCH
+
+                WHEN "2"
+                    PERFORM FIND-SOMEONE
+
+                WHEN "3"
+                    PERFORM SKILL-MENU
+
+                WHEN "4"
+                    MOVE "Y" TO WS-END-INPUT
+
+                WHEN OTHER
+                    MOVE "Please enter a number from 1 to 4."
+                        TO WS-MESSAGE
+                    PERFORM SHOW-TEXT
+
+            END-EVALUATE
+
+        END-IF
+
+    END-PERFORM.
+
+*> Job Search Placeholder
+JOB-SEARCH.
+
+    MOVE "Job search/internship is under construction."
+        TO WS-MESSAGE
+    PERFORM SHOW-TEXT.
+
+*> Find Someone Placeholder
+FIND-SOMEONE.
+
+    MOVE "Find someone you know is under construction."
+        TO WS-MESSAGE
+    PERFORM SHOW-TEXT.
+
+*> Displays the skill menu and handles skill selections
+SKILL-MENU.
+
+    MOVE "N" TO WS-EXIT-SKILL-MENU
+
+    *> Keep showing the skill menu until the user chooses Go Back
+    PERFORM UNTIL WS-EXIT-SKILL-MENU = "Y"
+        OR WS-END-INPUT = "Y"
+
+        MOVE "Learn a New Skill:"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "1. Python"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "2. Java"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "3. Cybersecurity"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "4. Data Science"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "5. Web Development"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "6. Go Back"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "Enter your choice:"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        *> Read the user's menu selection from the input file
+        PERFORM READ-INPUT
+
+        IF WS-END-INPUT = "N"
+
+            MOVE INPUT-RECORD(1:1)
+                TO WS-SKILL-MENU-OPTION
+
+            EVALUATE WS-SKILL-MENU-OPTION
+
+                WHEN "1"
+                WHEN "2"
+                WHEN "3"
+                WHEN "4"
+                WHEN "5"
+                    MOVE "This skill is under construction."
+                        TO WS-MESSAGE
+                    PERFORM SHOW-TEXT
+
+                WHEN "6"
+                    MOVE "Y"
+                        TO WS-EXIT-SKILL-MENU
+
+                WHEN OTHER
+                    MOVE "Please enter a number from 1 to 6."
+                        TO WS-MESSAGE
+                    PERFORM SHOW-TEXT
+
+            END-EVALUATE
+
+        END-IF
+
+    END-PERFORM.
