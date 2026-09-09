@@ -25,7 +25,7 @@ FD OUTPUT-FILE.
 FD ACCOUNT-FILE.
 01 ACCOUNT-RECORD.
     05 ACCOUNT-RECORD-USERNAME PIC X(20).
-    05 ACCOUNT-RECORD-PASSWORD PIC X(12).
+    05 ACCOUNT-RECORD-PASSWORD-HASH PIC 9(10).
 
 WORKING-STORAGE SECTION.
 01 WS-INPUT-STATUS PIC XX VALUE SPACES.
@@ -43,19 +43,19 @@ WORKING-STORAGE SECTION.
 01 WS-CHAR-INDEX PIC 99 VALUE 0.
 01 WS-CHARACTER PIC X VALUE SPACE.
 01 WS-CHOICE PIC X VALUE SPACE.
+01 WS-POST-LOGIN-CHOICE PIC X VALUE SPACE.
+01 WS-SKILL-CHOICE PIC X VALUE SPACE.
+01 WS-LOGOUT PIC X VALUE "N".
+01 WS-GO-BACK PIC X VALUE "N".
 01 WS-USERNAME PIC X(20) VALUE SPACES.
 01 WS-PASSWORD PIC X(12) VALUE SPACES.
+01 WS-PASSWORD-HASH PIC 9(10) VALUE 0.
+01 WS-HASH-ACCUM PIC 9(18) VALUE 0.
 01 WS-MESSAGE PIC X(100) VALUE SPACES.
 01 WS-ACCOUNTS.
     05 WS-ACCOUNT OCCURS 5 TIMES.
         10 WS-SAVED-USERNAME PIC X(20).
-        10 WS-SAVED-PASSWORD PIC X(12).
-
-01 WS-POST-LOGIN-OPTION PIC X VALUE SPACE.
-
-01 WS-SKILL-MENU-OPTION PIC X VALUE SPACE.
-
-01 WS-EXIT-SKILL-MENU PIC X VALUE "N".
+        10 WS-SAVED-PASSWORD-HASH PIC 9(10).
 
 PROCEDURE DIVISION.
 MAIN.
@@ -131,6 +131,7 @@ CREATE-ACCOUNT.
 
                     IF WS-PASSWORD-OK = "Y"
                         MOVE INPUT-RECORD TO WS-PASSWORD
+                        PERFORM HASH-PASSWORD
                         PERFORM SAVE-ACCOUNT
                         MOVE "Account created successfully" TO WS-MESSAGE
                         PERFORM SHOW-TEXT
@@ -161,12 +162,12 @@ LOGIN.
 
         IF WS-END-INPUT = "N"
             MOVE INPUT-RECORD TO WS-PASSWORD
+            PERFORM HASH-PASSWORD
             PERFORM CHECK-LOGIN
 
             IF WS-ACCOUNT-FOUND = "Y"
                 MOVE "You have successfully logged in" TO WS-MESSAGE
                 PERFORM SHOW-TEXT
-                *> Show navigation options after successful login
                 PERFORM POST-LOGIN-MENU
             ELSE
                 MOVE "Incorrect username/password, please try again"
@@ -175,6 +176,102 @@ LOGIN.
             END-IF
         END-IF
     END-PERFORM.
+
+
+POST-LOGIN-MENU.
+    MOVE "N" TO WS-LOGOUT
+    MOVE SPACES TO WS-MESSAGE
+    STRING
+        "Welcome, " DELIMITED BY SIZE
+        WS-USERNAME DELIMITED BY SPACE
+        "!" DELIMITED BY SIZE
+        INTO WS-MESSAGE
+    END-STRING
+    PERFORM SHOW-TEXT
+
+    PERFORM UNTIL WS-LOGOUT = "Y" OR WS-END-INPUT = "Y"
+        PERFORM SHOW-POST-LOGIN-MENU
+        PERFORM READ-INPUT
+
+        IF WS-END-INPUT = "N"
+            MOVE INPUT-RECORD(1:1) TO WS-POST-LOGIN-CHOICE
+
+            EVALUATE WS-POST-LOGIN-CHOICE
+                WHEN "1"
+                    MOVE "Job search/internship is under construction."
+                        TO WS-MESSAGE
+                    PERFORM SHOW-TEXT
+                WHEN "2"
+                    MOVE "Find someone you know is under construction."
+                        TO WS-MESSAGE
+                    PERFORM SHOW-TEXT
+                WHEN "3"
+                    PERFORM SKILL-MENU
+                WHEN "4"
+                    MOVE "Y" TO WS-LOGOUT
+                    MOVE "Y" TO WS-END-INPUT
+                WHEN OTHER
+                    MOVE "Please enter 1, 2, 3, or 4." TO WS-MESSAGE
+                    PERFORM SHOW-TEXT
+            END-EVALUATE
+        END-IF
+    END-PERFORM.
+
+SHOW-POST-LOGIN-MENU.
+    MOVE "1. Search for a job" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    MOVE "2. Find someone you know" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    MOVE "3. Learn a new skill" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    MOVE "4. Logout" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    MOVE "Enter your choice:" TO WS-MESSAGE
+    PERFORM SHOW-TEXT.
+
+SKILL-MENU.
+    MOVE "N" TO WS-GO-BACK
+
+    PERFORM UNTIL WS-GO-BACK = "Y" OR WS-END-INPUT = "Y"
+        PERFORM SHOW-SKILL-MENU
+        PERFORM READ-INPUT
+
+        IF WS-END-INPUT = "N"
+            MOVE INPUT-RECORD(1:1) TO WS-SKILL-CHOICE
+
+            IF WS-SKILL-CHOICE >= "1" AND WS-SKILL-CHOICE <= "5"
+                MOVE "This skill is under construction." TO WS-MESSAGE
+                PERFORM SHOW-TEXT
+            ELSE
+                EVALUATE WS-SKILL-CHOICE
+                    WHEN "6"
+                        MOVE "Y" TO WS-GO-BACK
+                    WHEN OTHER
+                        MOVE "Please enter a number from 1 to 6."
+                            TO WS-MESSAGE
+                        PERFORM SHOW-TEXT
+                END-EVALUATE
+            END-IF
+        END-IF
+    END-PERFORM.
+
+SHOW-SKILL-MENU.
+    MOVE "Learn a New Skill:" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    MOVE "1. Python" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    MOVE "2. Java" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    MOVE "3. Cybersecurity" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    MOVE "4. Data Science" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    MOVE "5. Web Development" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    MOVE "6. Go Back" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    MOVE "Enter your choice:" TO WS-MESSAGE
+    PERFORM SHOW-TEXT.
 
 LOAD-ACCOUNTS.
     *> Load saved accounts.
@@ -191,8 +288,8 @@ LOAD-ACCOUNTS.
                     ADD 1 TO WS-ACCOUNT-COUNT
                     MOVE ACCOUNT-RECORD-USERNAME
                         TO WS-SAVED-USERNAME(WS-ACCOUNT-COUNT)
-                    MOVE ACCOUNT-RECORD-PASSWORD
-                        TO WS-SAVED-PASSWORD(WS-ACCOUNT-COUNT)
+                    MOVE ACCOUNT-RECORD-PASSWORD-HASH
+                        TO WS-SAVED-PASSWORD-HASH(WS-ACCOUNT-COUNT)
             END-READ
         END-PERFORM
         CLOSE ACCOUNT-FILE
@@ -202,13 +299,32 @@ SAVE-ACCOUNT.
     *> Save the account.
     ADD 1 TO WS-ACCOUNT-COUNT
     MOVE WS-USERNAME TO WS-SAVED-USERNAME(WS-ACCOUNT-COUNT)
-    MOVE WS-PASSWORD TO WS-SAVED-PASSWORD(WS-ACCOUNT-COUNT)
+    MOVE WS-PASSWORD-HASH
+        TO WS-SAVED-PASSWORD-HASH(WS-ACCOUNT-COUNT)
     MOVE WS-USERNAME TO ACCOUNT-RECORD-USERNAME
-    MOVE WS-PASSWORD TO ACCOUNT-RECORD-PASSWORD
+    MOVE WS-PASSWORD-HASH TO ACCOUNT-RECORD-PASSWORD-HASH
 
     OPEN EXTEND ACCOUNT-FILE
     WRITE ACCOUNT-RECORD
     CLOSE ACCOUNT-FILE.
+
+
+HASH-PASSWORD.
+    *> Epic #1 mentions storing a hashed password.  This is a simple
+    *> deterministic course-project hash, not production cryptography.
+    MOVE 5381 TO WS-HASH-ACCUM
+    COMPUTE WS-PASSWORD-LENGTH =
+        FUNCTION LENGTH(FUNCTION TRIM(WS-PASSWORD))
+
+    PERFORM VARYING WS-CHAR-INDEX FROM 1 BY 1
+        UNTIL WS-CHAR-INDEX > WS-PASSWORD-LENGTH
+        MOVE WS-PASSWORD(WS-CHAR-INDEX:1) TO WS-CHARACTER
+        COMPUTE WS-HASH-ACCUM = FUNCTION MOD(
+            (WS-HASH-ACCUM * 33) + FUNCTION ORD(WS-CHARACTER),
+            1000000000)
+    END-PERFORM
+
+    MOVE WS-HASH-ACCUM TO WS-PASSWORD-HASH.
 
 FIND-USERNAME.
     MOVE "N" TO WS-ACCOUNT-FOUND
@@ -224,7 +340,8 @@ CHECK-LOGIN.
     PERFORM VARYING WS-ACCOUNT-INDEX FROM 1 BY 1
         UNTIL WS-ACCOUNT-INDEX > WS-ACCOUNT-COUNT
         IF WS-USERNAME = WS-SAVED-USERNAME(WS-ACCOUNT-INDEX)
-            AND WS-PASSWORD = WS-SAVED-PASSWORD(WS-ACCOUNT-INDEX)
+            AND WS-PASSWORD-HASH =
+                WS-SAVED-PASSWORD-HASH(WS-ACCOUNT-INDEX)
             MOVE "Y" TO WS-ACCOUNT-FOUND
         END-IF
     END-PERFORM.
@@ -273,149 +390,3 @@ SHOW-TEXT.
     MOVE WS-MESSAGE TO OUTPUT-RECORD
     WRITE OUTPUT-RECORD
     MOVE SPACES TO WS-MESSAGE.
-
-*> Main menu after a successful login.
-POST-LOGIN-MENU.
-
-    PERFORM UNTIL WS-END-INPUT = "Y"
-
-        MOVE "1. Search for a job"
-            TO WS-MESSAGE
-        PERFORM SHOW-TEXT
-
-        MOVE "2. Find someone you know"
-            TO WS-MESSAGE
-        PERFORM SHOW-TEXT
-
-        MOVE "3. Learn a new skill"
-            TO WS-MESSAGE
-        PERFORM SHOW-TEXT
-
-        MOVE "4. Logout"
-            TO WS-MESSAGE
-        PERFORM SHOW-TEXT
-
-        MOVE "Enter your choice:"
-            TO WS-MESSAGE
-        PERFORM SHOW-TEXT
-
-        PERFORM READ-INPUT
-
-        IF WS-END-INPUT = "N"
-
-            MOVE INPUT-RECORD(1:1)
-                TO WS-POST-LOGIN-OPTION
-
-            EVALUATE WS-POST-LOGIN-OPTION
-
-                WHEN "1"
-                    PERFORM JOB-SEARCH
-
-                WHEN "2"
-                    PERFORM FIND-SOMEONE
-
-                WHEN "3"
-                    PERFORM SKILL-MENU
-
-                WHEN "4"
-                    MOVE "Y" TO WS-END-INPUT
-
-                WHEN OTHER
-                    MOVE "Please enter a number from 1 to 4."
-                        TO WS-MESSAGE
-                    PERFORM SHOW-TEXT
-
-            END-EVALUATE
-
-        END-IF
-
-    END-PERFORM.
-
-*> Job Search Placeholder
-JOB-SEARCH.
-
-    MOVE "Job search/internship is under construction."
-        TO WS-MESSAGE
-    PERFORM SHOW-TEXT.
-
-*> Find Someone Placeholder
-FIND-SOMEONE.
-
-    MOVE "Find someone you know is under construction."
-        TO WS-MESSAGE
-    PERFORM SHOW-TEXT.
-
-*> Displays the skill menu and handles skill selections
-SKILL-MENU.
-
-    MOVE "N" TO WS-EXIT-SKILL-MENU
-
-    *> Keep showing the skill menu until the user chooses Go Back
-    PERFORM UNTIL WS-EXIT-SKILL-MENU = "Y"
-        OR WS-END-INPUT = "Y"
-
-        MOVE "Learn a New Skill:"
-            TO WS-MESSAGE
-        PERFORM SHOW-TEXT
-
-        MOVE "1. Python"
-            TO WS-MESSAGE
-        PERFORM SHOW-TEXT
-
-        MOVE "2. Java"
-            TO WS-MESSAGE
-        PERFORM SHOW-TEXT
-
-        MOVE "3. Cybersecurity"
-            TO WS-MESSAGE
-        PERFORM SHOW-TEXT
-
-        MOVE "4. Data Science"
-            TO WS-MESSAGE
-        PERFORM SHOW-TEXT
-
-        MOVE "5. Web Development"
-            TO WS-MESSAGE
-        PERFORM SHOW-TEXT
-
-        MOVE "6. Go Back"
-            TO WS-MESSAGE
-        PERFORM SHOW-TEXT
-
-        MOVE "Enter your choice:"
-            TO WS-MESSAGE
-        PERFORM SHOW-TEXT
-
-        *> Read the user's menu selection from the input file
-        PERFORM READ-INPUT
-
-        IF WS-END-INPUT = "N"
-
-            MOVE INPUT-RECORD(1:1)
-                TO WS-SKILL-MENU-OPTION
-
-            EVALUATE WS-SKILL-MENU-OPTION
-
-                WHEN "1"
-                WHEN "2"
-                WHEN "3"
-                WHEN "4"
-                WHEN "5"
-                    MOVE "This skill is under construction."
-                        TO WS-MESSAGE
-                    PERFORM SHOW-TEXT
-
-                WHEN "6"
-                    MOVE "Y"
-                        TO WS-EXIT-SKILL-MENU
-
-                WHEN OTHER
-                    MOVE "Please enter a number from 1 to 6."
-                        TO WS-MESSAGE
-                    PERFORM SHOW-TEXT
-
-            END-EVALUATE
-
-        END-IF
-
-    END-PERFORM.
