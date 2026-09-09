@@ -51,6 +51,12 @@ WORKING-STORAGE SECTION.
         10 WS-SAVED-USERNAME PIC X(20).
         10 WS-SAVED-PASSWORD PIC X(12).
 
+01 WS-POST-LOGIN-OPTION PIC X VALUE SPACE.
+
+01 WS-SKILL-MENU-OPTION PIC X VALUE SPACE.
+
+01 WS-EXIT-SKILL-MENU PIC X VALUE "N".
+
 PROCEDURE DIVISION.
 MAIN.
     *> Open the files.
@@ -160,6 +166,8 @@ LOGIN.
             IF WS-ACCOUNT-FOUND = "Y"
                 MOVE "You have successfully logged in" TO WS-MESSAGE
                 PERFORM SHOW-TEXT
+                *> Show navigation options after successful login
+                PERFORM POST-LOGIN-MENU
             ELSE
                 MOVE "Incorrect username/password, please try again"
                     TO WS-MESSAGE
@@ -265,3 +273,150 @@ SHOW-TEXT.
     MOVE WS-MESSAGE TO OUTPUT-RECORD
     WRITE OUTPUT-RECORD
     MOVE SPACES TO WS-MESSAGE.
+
+*> Main menu after a successful login.
+POST-LOGIN-MENU.
+
+    PERFORM UNTIL WS-END-INPUT = "Y"
+
+        MOVE "1. Search for a job"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "2. Find someone you know"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "3. Learn a new skill"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "4. Logout"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "Enter your choice:"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        PERFORM READ-INPUT
+
+        IF WS-END-INPUT = "N"
+
+            MOVE INPUT-RECORD(1:1)
+                TO WS-POST-LOGIN-OPTION
+
+            EVALUATE WS-POST-LOGIN-OPTION
+
+                WHEN "1"
+                    PERFORM JOB-SEARCH
+
+                WHEN "2"
+                    PERFORM FIND-SOMEONE
+
+                WHEN "3"
+                    PERFORM SKILL-MENU
+
+                WHEN "4"
+                    MOVE "Y" TO WS-END-INPUT
+
+                WHEN OTHER
+                    MOVE "Please enter a number from 1 to 4."
+                        TO WS-MESSAGE
+                    PERFORM SHOW-TEXT
+
+            END-EVALUATE
+
+        END-IF
+
+    END-PERFORM.
+
+*> Job Search Placeholder
+JOB-SEARCH.
+
+    MOVE "Job search/internship is under construction."
+        TO WS-MESSAGE
+    PERFORM SHOW-TEXT.
+
+*> Find Someone Placeholder
+FIND-SOMEONE.
+
+    MOVE "Find someone you know is under construction."
+        TO WS-MESSAGE
+    PERFORM SHOW-TEXT.
+
+*> Displays the skill menu and handles skill selections
+SKILL-MENU.
+
+    MOVE "N" TO WS-EXIT-SKILL-MENU
+
+    *> Keep showing the skill menu until the user chooses Go Back
+    PERFORM UNTIL WS-EXIT-SKILL-MENU = "Y"
+        OR WS-END-INPUT = "Y"
+
+        MOVE "Learn a New Skill:"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "1. COBOL Programming"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "2. Resume Writing"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "3. Interview Skills"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "4. Git and GitHub"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "5. Team Communication"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "6. Go Back"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "Enter your choice:"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        *> Read the user's menu selection from the input file
+        PERFORM READ-INPUT
+
+        IF WS-END-INPUT = "N"
+
+            MOVE INPUT-RECORD(1:1)
+                TO WS-SKILL-MENU-OPTION
+
+            EVALUATE WS-SKILL-MENU-OPTION
+
+                WHEN "1"
+                WHEN "2"
+                WHEN "3"
+                WHEN "4"
+                WHEN "5"
+                    MOVE "This skill is under construction."
+                        TO WS-MESSAGE
+                    PERFORM SHOW-TEXT
+
+                WHEN "6"
+                    MOVE "Y"
+                        TO WS-EXIT-SKILL-MENU
+
+                WHEN OTHER
+                    MOVE "Please enter a number from 1 to 6."
+                        TO WS-MESSAGE
+                    PERFORM SHOW-TEXT
+
+            END-EVALUATE
+
+        END-IF
+
+    END-PERFORM.
+    
