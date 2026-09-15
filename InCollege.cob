@@ -17,10 +17,10 @@ FILE-CONTROL.
 DATA DIVISION.
 FILE SECTION.
 FD INPUT-FILE.
-01 INPUT-RECORD PIC X(100).
+01 INPUT-RECORD PIC X(200).
 
 FD OUTPUT-FILE.
-01 OUTPUT-RECORD PIC X(100).
+01 OUTPUT-RECORD PIC X(200).
 
 FD ACCOUNT-FILE.
 01 ACCOUNT-RECORD.
@@ -45,7 +45,7 @@ WORKING-STORAGE SECTION.
 01 WS-CHOICE PIC X VALUE SPACE.
 01 WS-USERNAME PIC X(20) VALUE SPACES.
 01 WS-PASSWORD PIC X(12) VALUE SPACES.
-01 WS-MESSAGE PIC X(100) VALUE SPACES.
+01 WS-MESSAGE PIC X(200) VALUE SPACES.
 01 WS-ACCOUNTS.
     05 WS-ACCOUNT OCCURS 5 TIMES.
         10 WS-SAVED-USERNAME PIC X(20).
@@ -56,6 +56,20 @@ WORKING-STORAGE SECTION.
 01 WS-SKILL-MENU-OPTION PIC X VALUE SPACE.
 
 01 WS-EXIT-SKILL-MENU PIC X VALUE "N".
+
+*> Profile information
+01 WS-PROFILE.
+    05 WS-PROFILE-USERNAME PIC X(20) VALUE SPACES.
+    05 WS-FIRST-NAME PIC X(30) VALUE SPACES.
+    05 WS-LAST-NAME PIC X(30) VALUE SPACES.
+    05 WS-UNIVERSITY PIC X(50) VALUE SPACES.
+    05 WS-MAJOR PIC X(40) VALUE SPACES.
+    05 WS-GRAD-YEAR PIC X(4) VALUE SPACES.
+    05 WS-ABOUT-ME PIC X(200) VALUE SPACES.
+
+01 WS-PROFILE-FOUND PIC X VALUE "N".
+01 WS-PROFILE-VALID PIC X VALUE "N".
+01 WS-GRAD-YEAR-VALID PIC X VALUE "N".
 
 PROCEDURE DIVISION.
 MAIN.
@@ -279,19 +293,27 @@ POST-LOGIN-MENU.
 
     PERFORM UNTIL WS-END-INPUT = "Y"
 
-        MOVE "1. Search for a job"
+        MOVE "1. Create/Edit My Profile"
             TO WS-MESSAGE
         PERFORM SHOW-TEXT
 
-        MOVE "2. Find someone you know"
+        MOVE "2. View My Profile"
             TO WS-MESSAGE
         PERFORM SHOW-TEXT
 
-        MOVE "3. Learn a new skill"
+        MOVE "3. Search for a job"
             TO WS-MESSAGE
         PERFORM SHOW-TEXT
 
-        MOVE "4. Logout"
+        MOVE "4. Find someone you know"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "5. Learn a New Skill"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+
+        MOVE "6. Logout"
             TO WS-MESSAGE
         PERFORM SHOW-TEXT
 
@@ -309,19 +331,25 @@ POST-LOGIN-MENU.
             EVALUATE WS-POST-LOGIN-OPTION
 
                 WHEN "1"
-                    PERFORM JOB-SEARCH
+                    PERFORM CREATE-EDIT-PROFILE
 
                 WHEN "2"
-                    PERFORM FIND-SOMEONE
+                    PERFORM VIEW-PROFILE
 
                 WHEN "3"
-                    PERFORM SKILL-MENU
+                    PERFORM JOB-SEARCH
 
                 WHEN "4"
+                    PERFORM FIND-SOMEONE
+
+                WHEN "5"
+                    PERFORM SKILL-MENU
+
+                WHEN "6"
                     MOVE "Y" TO WS-END-INPUT
 
                 WHEN OTHER
-                    MOVE "Please enter a number from 1 to 4."
+                    MOVE "Please enter a number from 1 to 6."
                         TO WS-MESSAGE
                     PERFORM SHOW-TEXT
 
@@ -419,3 +447,231 @@ SKILL-MENU.
         END-IF
 
     END-PERFORM.
+
+*> Create or edit the logged-in user's profile
+CREATE-EDIT-PROFILE.
+
+    MOVE WS-USERNAME TO WS-PROFILE-USERNAME
+
+    MOVE "--- Create/Edit Profile ---"
+        TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+
+    *> First Name
+    MOVE "Enter First Name:"
+        TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    PERFORM READ-INPUT
+
+    IF WS-END-INPUT = "N"
+        MOVE INPUT-RECORD TO WS-FIRST-NAME
+    END-IF
+
+    *> Last Name
+    IF WS-END-INPUT = "N"
+        MOVE "Enter Last Name:"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+        PERFORM READ-INPUT
+
+        IF WS-END-INPUT = "N"
+            MOVE INPUT-RECORD TO WS-LAST-NAME
+        END-IF
+    END-IF
+
+    *> University/College Attended
+    IF WS-END-INPUT = "N"
+        MOVE "Enter University/College Attended:"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+        PERFORM READ-INPUT
+
+        IF WS-END-INPUT = "N"
+            MOVE INPUT-RECORD TO WS-UNIVERSITY
+        END-IF
+    END-IF
+
+
+    *> Major
+    IF WS-END-INPUT = "N"
+        MOVE "Enter Major:"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+        PERFORM READ-INPUT
+
+        IF WS-END-INPUT = "N"
+            MOVE INPUT-RECORD TO WS-MAJOR
+        END-IF
+    END-IF
+
+    *> Graduation Year
+    IF WS-END-INPUT = "N"
+        MOVE "Enter Graduation Year (YYYY):"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+        PERFORM READ-INPUT
+
+        IF WS-END-INPUT = "N"
+            MOVE INPUT-RECORD TO WS-GRAD-YEAR
+        END-IF
+    END-IF
+
+    *> About Me is optional
+    IF WS-END-INPUT = "N"
+        MOVE
+        "Enter About Me (optional, max 200 chars, enter blank line to skip):"
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+        PERFORM READ-INPUT
+
+        IF WS-END-INPUT = "N"
+            MOVE INPUT-RECORD TO WS-ABOUT-ME
+        END-IF
+    END-IF
+
+    *> Validate the completed profile
+    IF WS-END-INPUT = "N"
+        PERFORM VALIDATE-PROFILE
+
+        IF WS-PROFILE-VALID = "Y"
+            MOVE "Profile information is valid."
+                TO WS-MESSAGE
+            PERFORM SHOW-TEXT
+        ELSE
+            MOVE "Profile was not saved because required information is invalid."
+                TO WS-MESSAGE
+            PERFORM SHOW-TEXT
+        END-IF
+    END-IF.
+
+*> View the profile for the currently logged-in user
+VIEW-PROFILE.
+
+    MOVE "N" TO WS-PROFILE-FOUND
+
+    IF WS-PROFILE-USERNAME = WS-USERNAME
+        AND WS-PROFILE-VALID = "Y"
+        MOVE "Y" TO WS-PROFILE-FOUND
+    END-IF
+
+    IF WS-PROFILE-FOUND = "Y"
+        PERFORM DISPLAY-PROFILE
+    ELSE
+        MOVE "No profile has been created for this user."
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+    END-IF.
+
+*> Display the current user's complete profile
+DISPLAY-PROFILE.
+
+    MOVE "--- Your Profile ---"
+        TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+
+    STRING
+        "Name: "
+        FUNCTION TRIM(WS-FIRST-NAME)
+        " "
+        FUNCTION TRIM(WS-LAST-NAME)
+        INTO WS-MESSAGE
+    END-STRING
+    PERFORM SHOW-TEXT
+
+    STRING
+        "University: "
+        FUNCTION TRIM(WS-UNIVERSITY)
+        INTO WS-MESSAGE
+    END-STRING
+    PERFORM SHOW-TEXT
+
+    STRING
+        "Major: "
+        FUNCTION TRIM(WS-MAJOR)
+        INTO WS-MESSAGE
+    END-STRING
+    PERFORM SHOW-TEXT
+
+    STRING
+        "Graduation Year: "
+        WS-GRAD-YEAR
+        INTO WS-MESSAGE
+    END-STRING
+    PERFORM SHOW-TEXT
+
+    IF WS-ABOUT-ME NOT = SPACES
+        STRING
+            "About Me: "
+            FUNCTION TRIM(WS-ABOUT-ME)
+            INTO WS-MESSAGE
+        END-STRING
+        PERFORM SHOW-TEXT
+    END-IF
+
+    MOVE "--------------------"
+        TO WS-MESSAGE
+    PERFORM SHOW-TEXT.
+    
+
+*> Validate all required profile information
+VALIDATE-PROFILE.
+
+    MOVE "Y" TO WS-PROFILE-VALID
+
+    IF WS-FIRST-NAME = SPACES
+        MOVE "First Name is required."
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+        MOVE "N" TO WS-PROFILE-VALID
+    END-IF
+
+    IF WS-LAST-NAME = SPACES
+        MOVE "Last Name is required."
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+        MOVE "N" TO WS-PROFILE-VALID
+    END-IF
+
+    IF WS-UNIVERSITY = SPACES
+        MOVE "University/College Attended is required."
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+        MOVE "N" TO WS-PROFILE-VALID
+    END-IF
+
+    IF WS-MAJOR = SPACES
+        MOVE "Major is required."
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+        MOVE "N" TO WS-PROFILE-VALID
+    END-IF
+
+    IF WS-GRAD-YEAR = SPACES
+        MOVE "Graduation Year is required."
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+        MOVE "N" TO WS-PROFILE-VALID
+    ELSE
+        PERFORM VALIDATE-GRAD-YEAR
+
+        IF WS-GRAD-YEAR-VALID = "N"
+            MOVE "Graduation Year must be between 2026 and 2033."
+                TO WS-MESSAGE
+            PERFORM SHOW-TEXT
+            MOVE "N" TO WS-PROFILE-VALID
+        END-IF
+    END-IF.
+
+
+*> Validate the four-digit graduation year
+VALIDATE-GRAD-YEAR.
+
+    MOVE "N" TO WS-GRAD-YEAR-VALID
+
+    IF WS-GRAD-YEAR IS NUMERIC
+        IF WS-GRAD-YEAR > "2025"
+            AND WS-GRAD-YEAR < "2034"
+            MOVE "Y" TO WS-GRAD-YEAR-VALID
+        END-IF
+    END-IF.
+
