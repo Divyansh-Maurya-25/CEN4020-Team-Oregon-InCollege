@@ -10,10 +10,10 @@ Before the first clean test:
 4. Compare the generated InCollege-Output.txt with the included sample.
 
 Important persistence test:
-1. Run the program once and create a profile.
+1. Copy SCRUM-121-Run1-CreateAndSave.txt from Epic2-Combined-Test-Input
+   over InCollege-Input.txt, then run the program once.
 2. Do not delete accounts.dat or profiles.dat.
-3. Replace InCollege-Input.txt with a second input that logs in and chooses
-   View My Profile.
+3. Copy SCRUM-121-Run2-RestartAndView.txt over InCollege-Input.txt.
 4. Run the program again and verify that the same profile is displayed.
 
 Profile menu:
@@ -34,6 +34,12 @@ Jira retesting priorities:
 - SCRUM-116: zero through three education records
 - SCRUM-121: save, exit, restart, log in, and view the saved profile
 - SCRUM-133: confirm the profile choices are reachable after login
+
+Prepared combined test inputs:
+- SCRUM-111-116-ThreeEntries.txt tests the upper limit of three entries.
+- SCRUM-121-Run1-CreateAndSave.txt creates persistent data.
+- SCRUM-121-Run2-RestartAndView.txt checks that data after a restart.
+- SCRUM-133-MenuReachable.txt confirms the new menu appears after login.
 
 Note: Abdallah's earlier test files were made for Gabbriel's branch before
 the experience and education prompts were connected. Their input sequences
