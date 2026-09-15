@@ -1,0 +1,11 @@
+1
+abdallah
+GoodPass1!
+1
+Mirror
+Check
+USF
+Computer Science
+2028
+Output must match.
+2
