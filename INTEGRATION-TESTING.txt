@@ -1,0 +1,40 @@
+Epic 2 Combined Local Testing
+
+This folder combines Gabbriel's profile menu and required fields with
+Divyansh's profile persistence, work experience, and education code.
+
+Before the first clean test:
+1. Delete accounts.dat and profiles.dat if they already exist.
+2. Compile InCollege.cob with GnuCOBOL.
+3. Run the program using InCollege-Input.txt.
+4. Compare the generated InCollege-Output.txt with the included sample.
+
+Important persistence test:
+1. Run the program once and create a profile.
+2. Do not delete accounts.dat or profiles.dat.
+3. Replace InCollege-Input.txt with a second input that logs in and chooses
+   View My Profile.
+4. Run the program again and verify that the same profile is displayed.
+
+Profile menu:
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+6. Logout
+
+Experience and education:
+- Enter DONE at the first prompt to save zero entries.
+- Enter DONE after an entry to stop before reaching three entries.
+- The program stops accepting entries after the third entry.
+
+Jira retesting priorities:
+- SCRUM-111: zero through three experience records
+- SCRUM-116: zero through three education records
+- SCRUM-121: save, exit, restart, log in, and view the saved profile
+- SCRUM-133: confirm the profile choices are reachable after login
+
+Note: Abdallah's earlier test files were made for Gabbriel's branch before
+the experience and education prompts were connected. Their input sequences
+may need DONE lines added before later menu selections.
