@@ -1,0 +1,27 @@
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+1
+Please enter your username:
+abdallah
+Please enter your password:
+GoodPass1!
+You have successfully logged in
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+6. Logout
+Enter your choice:
+2
+No profile has been created for this user.
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+6. Logout
+Enter your choice:
+--- END_OF_PROGRAM_EXECUTION ---
