@@ -1,119 +1,334 @@
-# InCollege - Epic #2
+# InCollege — Team Oregon
 
-## Project Overview
+## Overview
 
-This repository contains the combined Epic #1 and Epic #2 work for the
-CEN 4020 Team Oregon InCollege project. The program is written in COBOL.
+This repository contains the CEN 4020 Team Oregon implementation of InCollege through Epic #2.
 
-Epic #2 adds personal profiles. A user must create an account and log in
-before creating or viewing a profile.
+Epic #2 builds on the Epic #1 authentication and navigation system by adding user profile creation, editing, viewing, and persistent profile storage.
 
-## Epic #2 Features
+The project is written in COBOL and uses file-based input and output.
 
-- Create a personal profile.
-- Edit an existing profile.
-- View the profile for the logged-in user.
-- Require a first name, last name, university, major, and graduation year.
-- Allow an optional About Me section.
-- Allow zero through three work experience entries.
-- Allow zero through three education entries.
-- Save profiles in `profiles.dat`.
-- Load saved profiles after the program is restarted.
-- Read all program input from `InCollege-Input.txt`.
-- Display output on the console and write the same output to
-  `InCollege-Output.txt`.
+## Team
 
-## Team Roles
+- Allen Nguyen — Scrum Master
+- Divyansh Maurya — Developer I
+- Gabbriel McIntosh — Developer II
+- Abdallah Mostafa Mohamed Mohamed Metwaly — Tester
+- Lucas Montanaro — Tester
 
-- Allen Nguyen - Scrum Master
-- Divyansh Maurya - Developer
-- Gabbriel McIntosh - Developer
-- Abdallah Mostafa Mohamed Mohamed Metwaly - Tester
-- Lucas Montanaro - Tester
+## Implemented Functionality
+
+### Epic #1
+
+The program supports:
+
+- Create a new InCollege account
+- Log in to an existing account
+- Validate password requirements
+- Prevent duplicate usernames
+- Limit the system to five accounts
+- Save accounts between program executions
+- Store hashed passwords instead of plaintext passwords
+- Handle failed login attempts
+- Display post-login navigation
+- Search for a job placeholder
+- Find someone placeholder
+- Learn a New Skill menu
+- Logout
+- File-based input
+- Console output
+- Matching output-file generation
+
+### Epic #2
+
+Epic #2 adds:
+
+- Create a user profile
+- Edit an existing profile
+- View the logged-in user's profile
+- Required profile-field validation
+- Graduation-year validation
+- Optional About Me section
+- Up to three experience entries
+- Up to three education entries
+- Persistent profile storage
+- Profiles associated with usernames
+- Profile data retained after restarting the program
 
 ## Requirements
 
-The course uses GnuCOBOL. This project was checked with GnuCOBOL 3.2.0.
+The project uses GnuCOBOL.
 
-Verify the compiler:
+The course development environment uses:
 
 ```text
+GnuCOBOL 3.1.2
+```
+
+Verify installation with:
+
+```bash
 cobc --version
 ```
 
-Compile the program:
+## Compile
 
-```text
+From the directory containing `InCollege.cob`:
+
+```bash
 cobc -x -o InCollege InCollege.cob
 ```
 
-On Windows, the output file can be named `InCollege.exe`.
+## Run
 
-Run the program from the same folder as `InCollege-Input.txt`:
-
-```text
+```bash
 ./InCollege
 ```
 
-## Program Files
+The program reads all user input from:
 
-- `InCollege.cob` - main COBOL source code
-- `InCollege-Input.txt` - actions and information read by the program
-- `InCollege-Output.txt` - program output
-- `accounts.dat` - saved accounts created while the program runs
-- `profiles.dat` - saved profiles created while the program runs
-- `Roles.txt` - team roles
-- `INTEGRATION-TESTING.txt` - combined-build testing instructions
-- `Epic2-Storyx-Test-Input` - Epic #2 tester input files
-- `Epic2-Storyx-Test-Output` - earlier Epic #2 output files
-- `Epic2-Combined-Test-Input` - integration retest inputs
-- `Epic2-Lucas-Test-Input` - prepared inputs for the five remaining tests
-- `Epic1-Archive` - test files retained from the completed Epic #1 sprint
+```text
+InCollege-Input.txt
+```
+
+Program output is:
+
+- Displayed in the terminal
+- Written to `InCollege-Output.txt`
+
+The console output and output file are designed to be identical.
+
+They can be checked with:
+
+```bash
+./InCollege | tee console.txt
+diff -u console.txt InCollege-Output.txt
+```
+
+If `diff` produces no output, the console output and `InCollege-Output.txt` match.
+
+## Account Creation and Login
+
+Before login, the program displays:
+
+```text
+1. Log In
+2. Create New Account
+```
+
+Users may create an account and then log in using the created username and password.
+
+### Password Requirements
+
+Passwords must:
+
+- Be at least 8 characters long
+- Be no more than 12 characters long
+- Contain at least one uppercase letter
+- Contain at least one digit
+- Contain at least one special character
+
+Account information is stored in:
+
+```text
+accounts.dat
+```
+
+The project stores a deterministic password hash rather than the plaintext password.
+
+The hashing implementation is intended for this course assignment and is not a production-grade password-security implementation.
 
 ## Post-Login Menu
 
-After logging in, the user sees:
+After a successful login, the program displays:
 
+```text
 1. Create/Edit My Profile
 2. View My Profile
 3. Search for a job
 4. Find someone you know
 5. Learn a New Skill
 6. Logout
+```
 
-## Profile Information
+## Create/Edit My Profile
 
-Required fields:
+A logged-in user can create or edit their profile.
 
-- First name
-- Last name
-- University or college
+### Required Fields
+
+The following fields are required:
+
+- First Name
+- Last Name
+- University/College Attended
 - Major
-- Graduation year from 2026 through 2033
+- Graduation Year
 
-Optional profile information:
+The graduation year must:
 
+- Contain exactly four digits
+- Be greater than 2025
+- Be less than 2034
+
+Valid graduation years are therefore:
+
+```text
+2026 through 2033
+```
+
+### About Me
+
+The user may optionally provide an About Me section.
+
+The field may also be left blank.
+
+## Experience
+
+A profile may contain up to three experience entries.
+
+Each experience entry contains:
+
+- Title
+- Company/Organization
+- Dates
+- Description — optional
+
+The user may enter `DONE` when no additional experience entries are needed.
+
+## Education
+
+A profile may contain up to three education entries.
+
+Each education entry contains:
+
+- Degree
+- University/College
+- Years Attended
+
+The user may enter `DONE` when no additional education entries are needed.
+
+## View My Profile
+
+A logged-in user can select:
+
+```text
+2. View My Profile
+```
+
+The program displays the complete saved profile, including:
+
+- Name
+- University
+- Major
+- Graduation Year
 - About Me
-- Up to three work experience entries
-- Up to three education entries
+- Experience entries
+- Education entries
 
-Enter `DONE` when no more experience or education entries are needed.
+## Profile Persistence
+
+Profile information is stored in:
+
+```text
+profiles.dat
+```
+
+Each profile is associated with the username of the account that created it.
+
+Profile data remains available after the program terminates and is started again.
+
+Account persistence continues to use:
+
+```text
+accounts.dat
+```
+
+## Example Epic #2 Input
+
+Example `InCollege-Input.txt`:
+
+```text
+2
+allen
+GoodPass1!
+1
+allen
+GoodPass1!
+1
+John
+Doe
+University of South Florida
+Computer Science
+2027
+I am a computer science student.
+Software Intern
+Example Company
+May 2026 - August 2026
+Built software features.
+DONE
+Bachelor of Science in Computer Science
+University of South Florida
+2024 - 2027
+DONE
+2
+6
+```
+
+This input:
+
+1. Creates an account
+2. Logs in
+3. Creates a profile
+4. Adds an About Me section
+5. Adds one experience entry
+6. Adds one education entry
+7. Saves the profile
+8. Views the profile
+9. Logs out
 
 ## Testing
 
-Compile the program before testing. Each independent test should start in a
-clean folder unless it is specifically testing persistence. Remove
-`accounts.dat` and `profiles.dat` before a clean test.
+Epic #2 testing covers:
 
-For a persistence test, keep both data files between the first and second
-program runs. The test is successful when the same account and profile load
-after restarting the executable.
+- Profile creation
+- Profile editing
+- Profile persistence
+- Viewing a profile
+- Blank required fields
+- Invalid graduation years
+- Non-numeric graduation years
+- Minimum valid graduation year
+- Maximum valid graduation year
+- Optional About Me
+- Three experience entries
+- Three education entries
+- File-based input
+- Matching console and output-file results
 
-The screen output and `InCollege-Output.txt` should be identical.
+The Epic #2 submission test archives are:
 
-## Current Status
+```text
+Epic2-Storyx-Test-Input.zip
+Epic2-Storyx-Test-Output.zip
+```
 
-The two Epic #2 developer branches have been combined on the
-`epic2-integration` branch. The combined source compiles and runs. Abdallah's
-assigned testing is complete. Lucas's five remaining Jira tests must be run
-against this exact integration branch before it is merged into `main`.
+Epic #1 functionality remains integrated into the final program and provides the authentication and navigation foundation for Epic #2.
+
+## Main Project Files
+
+```text
+InCollege.cob
+InCollege-Input.txt
+InCollege-Output.txt
+Roles.txt
+README.md
+```
+
+Additional test files and previous Epic artifacts may also be stored in the repository.
+
+## Project Status
+
+Epic #1 and Epic #2 functionality have been integrated.
+
+The current program supports account registration, authentication, account persistence, password validation, profile creation and editing, profile viewing, profile persistence, experience and education sections, file-driven input, and matching console/file output.
