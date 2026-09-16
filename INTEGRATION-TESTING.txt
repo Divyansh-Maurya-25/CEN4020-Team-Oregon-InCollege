@@ -41,6 +41,20 @@ Prepared combined test inputs:
 - SCRUM-121-Run2-RestartAndView.txt checks that data after a restart.
 - SCRUM-133-MenuReachable.txt confirms the new menu appears after login.
 
+Lucas's remaining Jira tests:
+- SCRUM-91: run the three SCRUM-91 files in order without deleting the
+  generated data files between runs.
+- SCRUM-112: run SCRUM-112-ExperienceMaximum.txt in a clean folder.
+- SCRUM-117: run SCRUM-117-EducationMaximum.txt in a clean folder.
+- SCRUM-122: run the two SCRUM-122 files in order without deleting the
+  generated data files between runs.
+- SCRUM-132: run SCRUM-132-ValidationAndBoundary.txt in a clean folder and
+  compare the console output with InCollege-Output.txt.
+
+The files for these tests are in Epic2-Lucas-Test-Input. Lucas should save
+his actual output files, add Pass or Fail to the matching Jira subtasks, and
+commit his evidence to a lucas-epic2-tests branch.
+
 Note: Abdallah's earlier test files were made for Gabbriel's branch before
 the experience and education prompts were connected. Their input sequences
 may need DONE lines added before later menu selections.

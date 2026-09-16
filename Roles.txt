@@ -1,7 +1,7 @@
-CEN 4020 - Team Oregon - Epic #1
+CEN 4020 - Team Oregon - Epic #2
 
-Divyansh Maurya - Scrum Master
-Gabbriel McIntosh - Developer #1
-Abdallah Mostafa Mohamed Mohamed Metwaly - Developer #2
-Lucas Montanaro - Tester #1
-Allen Nguyen - Tester #2
+Allen Nguyen - Scrum Master
+Divyansh Maurya - Developer
+Gabbriel McIntosh - Developer
+Abdallah Mostafa Mohamed Mohamed Metwaly - Tester
+Lucas Montanaro - Tester
