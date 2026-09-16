@@ -1,0 +1,23 @@
+2
+lucaspersist
+Persist2!
+1
+lucaspersist
+Persist2!
+1
+Pat
+Persist
+University of South Florida
+Software Engineering
+2028
+Restart persistence test
+Software Intern
+University of South Florida
+Summer 2026
+Testing persistence.
+DONE
+Bachelor Degree
+University of South Florida
+2024 - 2028
+DONE
+6

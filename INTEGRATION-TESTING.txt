@@ -1,0 +1,60 @@
+Epic 2 Combined Local Testing
+
+This folder combines Gabbriel's profile menu and required fields with
+Divyansh's profile persistence, work experience, and education code.
+
+Before the first clean test:
+1. Delete accounts.dat and profiles.dat if they already exist.
+2. Compile InCollege.cob with GnuCOBOL.
+3. Run the program using InCollege-Input.txt.
+4. Compare the generated InCollege-Output.txt with the included sample.
+
+Important persistence test:
+1. Copy SCRUM-121-Run1-CreateAndSave.txt from Epic2-Combined-Test-Input
+   over InCollege-Input.txt, then run the program once.
+2. Do not delete accounts.dat or profiles.dat.
+3. Copy SCRUM-121-Run2-RestartAndView.txt over InCollege-Input.txt.
+4. Run the program again and verify that the same profile is displayed.
+
+Profile menu:
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+6. Logout
+
+Experience and education:
+- Enter DONE at the first prompt to save zero entries.
+- Enter DONE after an entry to stop before reaching three entries.
+- The program stops accepting entries after the third entry.
+
+Jira retesting priorities:
+- SCRUM-111: zero through three experience records
+- SCRUM-116: zero through three education records
+- SCRUM-121: save, exit, restart, log in, and view the saved profile
+- SCRUM-133: confirm the profile choices are reachable after login
+
+Prepared combined test inputs:
+- SCRUM-111-116-ThreeEntries.txt tests the upper limit of three entries.
+- SCRUM-121-Run1-CreateAndSave.txt creates persistent data.
+- SCRUM-121-Run2-RestartAndView.txt checks that data after a restart.
+- SCRUM-133-MenuReachable.txt confirms the new menu appears after login.
+
+Lucas's remaining Jira tests:
+- SCRUM-91: run the three SCRUM-91 files in order without deleting the
+  generated data files between runs.
+- SCRUM-112: run SCRUM-112-ExperienceMaximum.txt in a clean folder.
+- SCRUM-117: run SCRUM-117-EducationMaximum.txt in a clean folder.
+- SCRUM-122: run the two SCRUM-122 files in order without deleting the
+  generated data files between runs.
+- SCRUM-132: run SCRUM-132-ValidationAndBoundary.txt in a clean folder and
+  compare the console output with InCollege-Output.txt.
+
+The files for these tests are in Epic2-Lucas-Test-Input. Lucas should save
+his actual output files, add Pass or Fail to the matching Jira subtasks, and
+commit his evidence to a lucas-epic2-tests branch.
+
+Note: Abdallah's earlier test files were made for Gabbriel's branch before
+the experience and education prompts were connected. Their input sequences
+may need DONE lines added before later menu selections.

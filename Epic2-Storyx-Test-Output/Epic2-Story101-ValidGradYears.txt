@@ -1,0 +1,76 @@
+Welcome to InCollege!
+1. Log In
+2. Create New Account
+Enter your choice:
+1
+Please enter your username:
+abdallah
+Please enter your password:
+GoodPass1!
+You have successfully logged in
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+6. Logout
+Enter your choice:
+1
+--- Create/Edit Profile ---
+Enter First Name:
+Low
+Enter Last Name:
+Boundary
+Enter University/College Attended:
+USF
+Enter Major:
+Computer Science
+Enter Graduation Year (YYYY):
+2026
+Enter About Me (optional, max 200 chars, enter blank line to skip):
+
+Profile information is valid.
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+6. Logout
+Enter your choice:
+1
+--- Create/Edit Profile ---
+Enter First Name:
+High
+Enter Last Name:
+Boundary
+Enter University/College Attended:
+USF
+Enter Major:
+Computer Science
+Enter Graduation Year (YYYY):
+2033
+Enter About Me (optional, max 200 chars, enter blank line to skip):
+
+Profile information is valid.
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+6. Logout
+Enter your choice:
+2
+--- Your Profile ---
+Name: High Boundary
+University: USF
+Major: Computer Science
+Graduation Year: 2033
+--------------------
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+6. Logout
+Enter your choice:
+--- END_OF_PROGRAM_EXECUTION ---

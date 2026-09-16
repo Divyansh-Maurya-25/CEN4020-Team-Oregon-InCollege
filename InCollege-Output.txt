@@ -18,50 +18,72 @@ allen
 Please enter your password:
 GoodPass1!
 You have successfully logged in
-Welcome, allen!
-1. Search for a job
-2. Find someone you know
-3. Learn a new skill
-4. Logout
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+6. Logout
 Enter your choice:
 1
-Job search/internship is under construction.
-1. Search for a job
-2. Find someone you know
-3. Learn a new skill
-4. Logout
+--- Create/Edit Profile ---
+Enter First Name:
+John
+Enter Last Name:
+Doe
+Enter University/College Attended:
+University of South Florida
+Enter Major:
+Computer Science
+Enter Graduation Year (YYYY):
+2027
+Enter About Me (optional, max 200 chars, enter blank line to skip):
+I am a computer science student.
+Experience #1 - Title (or DONE to finish):
+Software Intern
+Experience #1 - Company/Organization:
+Example Company
+Experience #1 - Dates:
+May 2026 - August 2026
+Experience #1 - Description (optional):
+Built software features.
+Experience #2 - Title (or DONE to finish):
+DONE
+Education #1 - Degree (or DONE to finish):
+Bachelor of Science in Computer Science
+Education #1 - University/College:
+University of South Florida
+Education #1 - Years Attended:
+2024 - 2027
+Education #2 - Degree (or DONE to finish):
+DONE
+Profile saved successfully.
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+6. Logout
 Enter your choice:
 2
-Find someone you know is under construction.
-1. Search for a job
-2. Find someone you know
-3. Learn a new skill
-4. Logout
-Enter your choice:
-3
-Learn a New Skill:
-1. Python
-2. Java
-3. Cybersecurity
-4. Data Science
-5. Web Development
-6. Go Back
-Enter your choice:
-1
-This skill is under construction.
-Learn a New Skill:
-1. Python
-2. Java
-3. Cybersecurity
-4. Data Science
-5. Web Development
-6. Go Back
+--- Your Profile ---
+Name: John Doe
+University: University of South Florida
+Major: Computer Science
+Graduation Year: 2027
+About Me: I am a computer science student.
+Experience #1: Software Intern at Example Company
+Dates: May 2026 - August 2026
+Description: Built software features.
+Education #1: Bachelor of Science in Computer Science - University of South Florida
+Years Attended: 2024 - 2027
+--------------------
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+6. Logout
 Enter your choice:
 6
-1. Search for a job
-2. Find someone you know
-3. Learn a new skill
-4. Logout
-Enter your choice:
-4
 --- END_OF_PROGRAM_EXECUTION ---

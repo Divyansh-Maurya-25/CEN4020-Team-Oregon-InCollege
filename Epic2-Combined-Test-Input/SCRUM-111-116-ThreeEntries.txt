@@ -1,0 +1,36 @@
+2
+threeuser
+Limit3!A
+1
+threeuser
+Limit3!A
+1
+Taylor
+Student
+University of South Florida
+Computer Science
+2029
+Testing three entries
+Software Intern
+Company One
+Summer 2025
+Worked on testing.
+Junior Developer
+Company Two
+Fall 2025
+Built a small application.
+Student Assistant
+University Lab
+Spring 2026
+Helped students with software.
+Associate Degree
+Hillsborough Community College
+2022 - 2024
+Bachelor Degree
+University of South Florida
+2024 - 2027
+Master Degree
+University of South Florida
+2027 - 2029
+2
+6

@@ -5,8 +5,20 @@ GoodPass1!
 allen
 GoodPass1!
 1
+John
+Doe
+University of South Florida
+Computer Science
+2027
+I am a computer science student.
+Software Intern
+Example Company
+May 2026 - August 2026
+Built software features.
+DONE
+Bachelor of Science in Computer Science
+University of South Florida
+2024 - 2027
+DONE
 2
-3
-1
 6
-4

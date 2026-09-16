@@ -1,0 +1,28 @@
+2
+expmax
+ExpPass1!
+1
+expmax
+ExpPass1!
+1
+Alex
+Tester
+University of South Florida
+Computer Science
+2029
+Maximum experience test
+Software Intern
+Company One
+Summer 2025
+Worked on testing.
+Junior Developer
+Company Two
+Fall 2025
+Built a small application.
+Student Assistant
+University Lab
+Spring 2026
+Helped students with software.
+DONE
+2
+6

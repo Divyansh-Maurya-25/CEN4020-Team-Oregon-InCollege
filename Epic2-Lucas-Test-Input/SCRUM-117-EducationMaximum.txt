@@ -1,0 +1,25 @@
+2
+edumax
+EduPass1!
+1
+edumax
+EduPass1!
+1
+Jordan
+Student
+University of South Florida
+Computer Science
+2029
+Maximum education test
+DONE
+Associate Degree
+Hillsborough Community College
+2022 - 2024
+Bachelor Degree
+University of South Florida
+2024 - 2027
+Master Degree
+University of South Florida
+2027 - 2029
+2
+6
