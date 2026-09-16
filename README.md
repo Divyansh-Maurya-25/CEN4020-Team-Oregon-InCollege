@@ -289,3 +289,24 @@ Project Status
 Epic #1 implementation and testing are complete.
 
 The program currently supports account registration, authentication, persistent account storage, password validation, password hashing, initial post-login navigation, file-driven input, and matching console/file output.
+
+# InCollege - Team Oregon
+
+## Epic #2
+
+This version of InCollege adds user profile creation, editing, viewing, and persistent profile storage while preserving the Epic #1 account creation, login, and navigation features.
+
+## Team
+
+- Allen Nguyen - Scrum Master
+- Divyansh Maurya - Developer I
+- Gabbriel McIntosh - Developer II
+- Abdallah Mostafa Mohamed Mohamed Metwaly - Tester
+- Lucas Montanaro - Tester
+
+## Compile
+
+Using GnuCOBOL:
+
+```bash
+cobc -x -o InCollege InCollege.cob
