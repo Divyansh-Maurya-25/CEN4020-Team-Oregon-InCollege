@@ -68,6 +68,7 @@ Run the program from the same folder as `InCollege-Input.txt`:
 - `Epic2-Storyx-Test-Output` - earlier Epic #2 output files
 - `Epic2-Combined-Test-Input` - integration retest inputs
 - `Epic2-Lucas-Test-Input` - prepared inputs for the five remaining tests
+- `Epic1-Archive` - test files retained from the completed Epic #1 sprint
 
 ## Post-Login Menu
 
