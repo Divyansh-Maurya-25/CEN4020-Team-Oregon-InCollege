@@ -30,7 +30,7 @@ FD ACCOUNT-FILE.
     05 ACCOUNT-RECORD-USERNAME PIC X(20).
     05 ACCOUNT-RECORD-PASSWORD-HASH PIC 9(10).
 
-*> Epic #2 profile persistence record.
+*> Epic 2
 FD PROFILE-FILE.
 01 PROFILE-RECORD.
     05 PR-USERNAME PIC X(20).
@@ -84,14 +84,7 @@ WORKING-STORAGE SECTION.
         10 WS-SAVED-USERNAME PIC X(20).
         10 WS-SAVED-PASSWORD-HASH PIC 9(10).
 
-*> ================================================================
-*> Epic #2 - Divyansh assigned profile tasks
-*> - edit/load/save an existing profile
-*> - work experience OCCURS table + prompts + three-entry limit
-*> - education OCCURS table + prompts + three-entry limit
-*> - profile persistence linked by username
-*> - all prompts continue to use SHOW-TEXT for mirrored output
-*> ================================================================
+*> Epic 2
 01 WS-PROFILE-STATUS PIC XX VALUE SPACES.
 01 WS-END-PROFILES PIC X VALUE "N".
 01 WS-PROFILE-COUNT PIC 9 VALUE 0.
@@ -108,8 +101,6 @@ WORKING-STORAGE SECTION.
 01 WS-SEARCH-INDEX PIC 9 VALUE 0.
 01 WS-SEARCH-FOUND PIC X VALUE "N".
 
-*> In-memory saved profiles.  There can be at most five because
-*> Epic #1 permits at most five accounts.
 01 WS-PROFILES.
     05 WS-PROFILE OCCURS 5 TIMES.
         10 WS-PROFILE-USERNAME PIC X(20).
@@ -168,7 +159,6 @@ MAIN.
 
     OPEN OUTPUT OUTPUT-FILE
     PERFORM LOAD-ACCOUNTS
-    *> SCRUM-120: load saved profiles when the program starts.
     PERFORM LOAD-PROFILES
 
     PERFORM UNTIL WS-END-INPUT = "Y"
@@ -408,14 +398,9 @@ SAVE-ACCOUNT.
     CLOSE ACCOUNT-FILE.
 
 
-*> ================================================================
-*> Epic #2 profile procedures for Divyansh's assigned Jira tasks.
-*> These are intentionally modular so the teammates implementing the
-*> create/view/menu stories can call them without duplicating logic.
-*> ================================================================
+*> Epic 2
 
 LOAD-PROFILES.
-    *> SCRUM-120: load saved profiles at startup.
     MOVE 0 TO WS-PROFILE-COUNT
     MOVE "N" TO WS-END-PROFILES
     OPEN INPUT PROFILE-FILE
@@ -435,7 +420,6 @@ LOAD-PROFILES.
     END-IF.
 
 FIND-PROFILE-BY-USERNAME.
-    *> SCRUM-88 / SCRUM-118: profiles are linked to account username.
     MOVE "N" TO WS-PROFILE-FOUND
     MOVE 0 TO WS-CURRENT-PROFILE-INDEX
 
@@ -448,7 +432,6 @@ FIND-PROFILE-BY-USERNAME.
     END-PERFORM.
 
 LOAD-CURRENT-PROFILE.
-    *> SCRUM-88: load the logged-in user's current profile by username.
     PERFORM FIND-PROFILE-BY-USERNAME
 
     IF WS-PROFILE-FOUND = "Y"
@@ -460,10 +443,6 @@ LOAD-CURRENT-PROFILE.
     END-IF.
 
 SAVE-CURRENT-PROFILE.
-    *> SCRUM-89 / SCRUM-92 / SCRUM-119:
-    *> - an edited profile replaces the previous in-memory record
-    *> - a new profile is added if none exists yet
-    *> - username always links the profile to the logged-in account
     MOVE WS-USERNAME TO WS-CURRENT-PROFILE-USERNAME
     PERFORM FIND-PROFILE-BY-USERNAME
 
@@ -487,8 +466,6 @@ SAVE-CURRENT-PROFILE.
     END-IF.
 
 WRITE-ALL-PROFILES.
-    *> SCRUM-119: rewriting the sequential file makes edited records
-    *> replace their previous values while preserving the other users.
     OPEN OUTPUT PROFILE-FILE
 
     PERFORM VARYING WS-PROFILE-INDEX FROM 1 BY 1
@@ -500,8 +477,6 @@ WRITE-ALL-PROFILES.
     CLOSE PROFILE-FILE.
 
 EDIT-WORK-EXPERIENCE.
-    *> SCRUM-108 / SCRUM-109 / SCRUM-110.
-    *> Re-entering this section replaces the user's previous list.
     MOVE 0 TO WS-CURRENT-EXPERIENCE-COUNT
     INITIALIZE WS-CURRENT-EXPERIENCES
     MOVE "N" TO WS-ENTRY-STOP
@@ -583,8 +558,6 @@ EDIT-WORK-EXPERIENCE.
     END-IF.
 
 EDIT-EDUCATION.
-    *> SCRUM-113 / SCRUM-114 / SCRUM-115.
-    *> Re-entering this section replaces the user's previous list.
     MOVE 0 TO WS-CURRENT-EDUCATION-COUNT
     INITIALIZE WS-CURRENT-EDUCATION-ENTRIES
     MOVE "N" TO WS-ENTRY-STOP
@@ -651,8 +624,7 @@ EDIT-EDUCATION.
     END-IF.
 
 HASH-PASSWORD.
-    *> Epic #1 mentions storing a hashed password.  This is a simple
-    *> deterministic course-project hash, not production cryptography.
+    *> Epic 1
     MOVE 5381 TO WS-HASH-ACCUM
     COMPUTE WS-PASSWORD-LENGTH =
         FUNCTION LENGTH(FUNCTION TRIM(WS-PASSWORD))
