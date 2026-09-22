@@ -67,17 +67,64 @@ Profile saved successfully.
 Enter your choice:
 2
 --- Your Profile ---
+==== Profile for John Doe
 Name: John Doe
 University: University of South Florida
 Major: Computer Science
 Graduation Year: 2027
 About Me: I am a computer science student.
-Experience #1: Software Intern at Example Company
+Experience:
+Experience #1
+Title: Software Intern
+Company: Example Company
 Dates: May 2026 - August 2026
 Description: Built software features.
-Education #1: Bachelor of Science in Computer Science - University of South Florida
+Education:
+Education #1
+Degree: Bachelor of Science in Computer Science
+University: University of South Florida
 Years Attended: 2024 - 2027
 --------------------
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+6. Logout
+Enter your choice:
+4
+Enter the full name of the person you are looking for:
+John Doe
+--- Found User Profile ---
+==== Profile for John Doe
+Name: John Doe
+University: University of South Florida
+Major: Computer Science
+Graduation Year: 2027
+About Me: I am a computer science student.
+Experience:
+Experience #1
+Title: Software Intern
+Company: Example Company
+Dates: May 2026 - August 2026
+Description: Built software features.
+Education:
+Education #1
+Degree: Bachelor of Science in Computer Science
+University: University of South Florida
+Years Attended: 2024 - 2027
+--------------------
+1. Create/Edit My Profile
+2. View My Profile
+3. Search for a job
+4. Find someone you know
+5. Learn a New Skill
+6. Logout
+Enter your choice:
+4
+Enter the full name of the person you are looking for:
+Nobody Here
+No one by that name could be found.
 1. Create/Edit My Profile
 2. View My Profile
 3. Search for a job

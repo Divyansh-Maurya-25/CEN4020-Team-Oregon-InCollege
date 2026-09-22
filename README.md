@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository contains the CEN 4020 Team Oregon implementation of InCollege through Epic #2.
+This folder contains Team Oregon's InCollege code with the Epic #3 profile viewing and user search changes.
 
 Epic #2 builds on the Epic #1 authentication and navigation system by adding user profile creation, editing, viewing, and persistent profile storage.
 
@@ -10,11 +10,11 @@ The project is written in COBOL and uses file-based input and output.
 
 ## Team
 
-- Allen Nguyen — Scrum Master
-- Divyansh Maurya — Developer I
-- Gabbriel McIntosh — Developer II
-- Abdallah Mostafa Mohamed Mohamed Metwaly — Tester
-- Lucas Montanaro — Tester
+- Lucas Montanaro — Scrum Master
+- Allen Nguyen — Coder #1
+- Divyansh Maurya — Coder #2
+- Gabbriel McIntosh — Tester #1
+- Abdallah Mostafa Mohamed Mohamed Metwaly — Tester #2
 
 ## Implemented Functionality
 
@@ -54,6 +54,14 @@ Epic #2 adds:
 - Persistent profile storage
 - Profiles associated with usernames
 - Profile data retained after restarting the program
+
+### Epic #3
+
+- View a saved profile with a name header and clearly labeled fields
+- Show Experience and Education entries, or `None` when they are empty
+- Search saved profiles by exact full name using menu option 4
+- Show the found user's complete profile or a no-match message
+- Display every result on screen and in `InCollege-Output.txt`
 
 ## Requirements
 
@@ -225,6 +233,19 @@ The program displays the complete saved profile, including:
 - About Me
 - Experience entries
 - Education entries
+
+## Find someone you know
+
+After logging in, choose `4` and put the full first and last name on the next line of `InCollege-Input.txt`. For example:
+
+```text
+4
+John Doe
+```
+
+The name must match a saved profile exactly. A partial name or a name with different capitalization will not match. If the user is found, the program shows the same profile fields and formatting used by `View My Profile`. The menu appears again after the search. All prompts and results also go to `InCollege-Output.txt`.
+
+The `InCollege-Input.txt` and `InCollege-Output.txt` files in this folder show a profile view, a successful search, and an unsuccessful search. The extra test script and notes are in `chat gpt`.
 
 ## Profile Persistence
 

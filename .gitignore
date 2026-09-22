@@ -2,3 +2,6 @@ InCollege
 *.so
 *.o
 accounts.dat
+profiles.dat
+*.exe
+__pycache__/

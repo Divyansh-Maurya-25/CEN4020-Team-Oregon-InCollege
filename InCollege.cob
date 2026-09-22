@@ -23,7 +23,7 @@ FD INPUT-FILE.
 01 INPUT-RECORD PIC X(200).
 
 FD OUTPUT-FILE.
-01 OUTPUT-RECORD PIC X(200).
+01 OUTPUT-RECORD PIC X(300).
 
 FD ACCOUNT-FILE.
 01 ACCOUNT-RECORD.
@@ -78,7 +78,7 @@ WORKING-STORAGE SECTION.
 01 WS-PASSWORD PIC X(12) VALUE SPACES.
 01 WS-PASSWORD-HASH PIC 9(10) VALUE 0.
 01 WS-HASH-ACCUM PIC 9(18) VALUE 0.
-01 WS-MESSAGE PIC X(200) VALUE SPACES.
+01 WS-MESSAGE PIC X(300) VALUE SPACES.
 01 WS-ACCOUNTS.
     05 WS-ACCOUNT OCCURS 5 TIMES.
         10 WS-SAVED-USERNAME PIC X(20).
@@ -103,6 +103,10 @@ WORKING-STORAGE SECTION.
 01 WS-PROFILE-VALID PIC X VALUE "N".
 01 WS-GRAD-YEAR-VALID PIC X VALUE "N".
 01 WS-GRAD-YEAR-LENGTH PIC 999 VALUE 0.
+01 WS-SEARCH-NAME PIC X(200) VALUE SPACES.
+01 WS-FULL-NAME PIC X(61) VALUE SPACES.
+01 WS-SEARCH-INDEX PIC 9 VALUE 0.
+01 WS-SEARCH-FOUND PIC X VALUE "N".
 
 *> In-memory saved profiles.  There can be at most five because
 *> Epic #1 permits at most five accounts.
@@ -294,9 +298,7 @@ POST-LOGIN-MENU.
                         TO WS-MESSAGE
                     PERFORM SHOW-TEXT
                 WHEN "4"
-                    MOVE "Find someone you know is under construction."
-                        TO WS-MESSAGE
-                    PERFORM SHOW-TEXT
+                    PERFORM SEARCH-FOR-USER
                 WHEN "5"
                     PERFORM SKILL-MENU
                 WHEN "6"
@@ -842,6 +844,8 @@ VIEW-PROFILE.
     PERFORM LOAD-CURRENT-PROFILE
 
     IF WS-PROFILE-FOUND = "Y"
+        MOVE "--- Your Profile ---" TO WS-MESSAGE
+        PERFORM SHOW-TEXT
         PERFORM DISPLAY-PROFILE
     ELSE
         MOVE "No profile has been created for this user."
@@ -849,11 +853,57 @@ VIEW-PROFILE.
         PERFORM SHOW-TEXT
     END-IF.
 
-*> Display the current user's complete profile
-DISPLAY-PROFILE.
-
-    MOVE "--- Your Profile ---"
+*> Search the saved profiles for an exact first and last name.
+SEARCH-FOR-USER.
+    MOVE "Enter the full name of the person you are looking for:"
         TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    PERFORM READ-INPUT
+
+    IF WS-END-INPUT = "N"
+        MOVE INPUT-RECORD TO WS-SEARCH-NAME
+        MOVE "N" TO WS-SEARCH-FOUND
+
+        PERFORM VARYING WS-SEARCH-INDEX FROM 1 BY 1
+            UNTIL WS-SEARCH-INDEX > WS-PROFILE-COUNT
+                OR WS-SEARCH-FOUND = "Y"
+            MOVE SPACES TO WS-FULL-NAME
+            STRING
+                FUNCTION TRIM(
+                    WS-PROFILE-FIRST-NAME(WS-SEARCH-INDEX))
+                " "
+                FUNCTION TRIM(
+                    WS-PROFILE-LAST-NAME(WS-SEARCH-INDEX))
+                INTO WS-FULL-NAME
+            END-STRING
+
+            IF WS-SEARCH-NAME = WS-FULL-NAME
+                MOVE "Y" TO WS-SEARCH-FOUND
+                MOVE WS-PROFILE(WS-SEARCH-INDEX)
+                    TO WS-CURRENT-PROFILE
+            END-IF
+        END-PERFORM
+
+        IF WS-SEARCH-FOUND = "Y"
+            MOVE "--- Found User Profile ---" TO WS-MESSAGE
+            PERFORM SHOW-TEXT
+            PERFORM DISPLAY-PROFILE
+        ELSE
+            MOVE "No one by that name could be found."
+                TO WS-MESSAGE
+            PERFORM SHOW-TEXT
+        END-IF
+    END-IF.
+
+*> Both menus use the same formatting for a complete profile.
+DISPLAY-PROFILE.
+    STRING
+        "==== Profile for "
+        FUNCTION TRIM(WS-CURRENT-FIRST-NAME)
+        " "
+        FUNCTION TRIM(WS-CURRENT-LAST-NAME)
+        INTO WS-MESSAGE
+    END-STRING
     PERFORM SHOW-TEXT
 
     STRING
@@ -895,58 +945,85 @@ DISPLAY-PROFILE.
         PERFORM SHOW-TEXT
     END-IF
 
-    PERFORM VARYING WS-ENTRY-INDEX FROM 1 BY 1
-        UNTIL WS-ENTRY-INDEX > WS-CURRENT-EXPERIENCE-COUNT
-        MOVE SPACES TO WS-MESSAGE
-        STRING
-            "Experience #" WS-ENTRY-INDEX ": "
-            FUNCTION TRIM(WS-CURRENT-EXP-TITLE(WS-ENTRY-INDEX))
-            " at "
-            FUNCTION TRIM(WS-CURRENT-EXP-COMPANY(WS-ENTRY-INDEX))
-            INTO WS-MESSAGE
-        END-STRING
+    MOVE "Experience:" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    IF WS-CURRENT-EXPERIENCE-COUNT = 0
+        MOVE "None" TO WS-MESSAGE
         PERFORM SHOW-TEXT
-
-        MOVE SPACES TO WS-MESSAGE
-        STRING
-            "Dates: "
-            FUNCTION TRIM(WS-CURRENT-EXP-DATES(WS-ENTRY-INDEX))
-            INTO WS-MESSAGE
-        END-STRING
-        PERFORM SHOW-TEXT
-
-        IF WS-CURRENT-EXP-DESCRIPTION(WS-ENTRY-INDEX) NOT = SPACES
+    ELSE
+        PERFORM VARYING WS-ENTRY-INDEX FROM 1 BY 1
+            UNTIL WS-ENTRY-INDEX > WS-CURRENT-EXPERIENCE-COUNT
             MOVE SPACES TO WS-MESSAGE
             STRING
-                "Description: "
-                FUNCTION TRIM(
-                    WS-CURRENT-EXP-DESCRIPTION(WS-ENTRY-INDEX))
+                "Experience #" WS-ENTRY-INDEX
                 INTO WS-MESSAGE
             END-STRING
             PERFORM SHOW-TEXT
-        END-IF
-    END-PERFORM
+            MOVE SPACES TO WS-MESSAGE
+            STRING "Title: "
+                FUNCTION TRIM(WS-CURRENT-EXP-TITLE(WS-ENTRY-INDEX))
+                INTO WS-MESSAGE
+            END-STRING
+            PERFORM SHOW-TEXT
+            MOVE SPACES TO WS-MESSAGE
+            STRING "Company: "
+                FUNCTION TRIM(WS-CURRENT-EXP-COMPANY(WS-ENTRY-INDEX))
+                INTO WS-MESSAGE
+            END-STRING
+            PERFORM SHOW-TEXT
+            MOVE SPACES TO WS-MESSAGE
+            STRING "Dates: "
+                FUNCTION TRIM(WS-CURRENT-EXP-DATES(WS-ENTRY-INDEX))
+                INTO WS-MESSAGE
+            END-STRING
+            PERFORM SHOW-TEXT
+            IF WS-CURRENT-EXP-DESCRIPTION(WS-ENTRY-INDEX)
+                NOT = SPACES
+                MOVE SPACES TO WS-MESSAGE
+                STRING "Description: "
+                    FUNCTION TRIM(
+                        WS-CURRENT-EXP-DESCRIPTION(WS-ENTRY-INDEX))
+                    INTO WS-MESSAGE
+                END-STRING
+                PERFORM SHOW-TEXT
+            END-IF
+        END-PERFORM
+    END-IF
 
-    PERFORM VARYING WS-ENTRY-INDEX FROM 1 BY 1
-        UNTIL WS-ENTRY-INDEX > WS-CURRENT-EDUCATION-COUNT
-        MOVE SPACES TO WS-MESSAGE
-        STRING
-            "Education #" WS-ENTRY-INDEX ": "
-            FUNCTION TRIM(WS-CURRENT-EDU-DEGREE(WS-ENTRY-INDEX))
-            " - "
-            FUNCTION TRIM(WS-CURRENT-EDU-UNIVERSITY(WS-ENTRY-INDEX))
-            INTO WS-MESSAGE
-        END-STRING
+    MOVE "Education:" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    IF WS-CURRENT-EDUCATION-COUNT = 0
+        MOVE "None" TO WS-MESSAGE
         PERFORM SHOW-TEXT
-
-        MOVE SPACES TO WS-MESSAGE
-        STRING
-            "Years Attended: "
-            FUNCTION TRIM(WS-CURRENT-EDU-YEARS(WS-ENTRY-INDEX))
-            INTO WS-MESSAGE
-        END-STRING
-        PERFORM SHOW-TEXT
-    END-PERFORM
+    ELSE
+        PERFORM VARYING WS-ENTRY-INDEX FROM 1 BY 1
+            UNTIL WS-ENTRY-INDEX > WS-CURRENT-EDUCATION-COUNT
+            MOVE SPACES TO WS-MESSAGE
+            STRING "Education #" WS-ENTRY-INDEX
+                INTO WS-MESSAGE
+            END-STRING
+            PERFORM SHOW-TEXT
+            MOVE SPACES TO WS-MESSAGE
+            STRING "Degree: "
+                FUNCTION TRIM(WS-CURRENT-EDU-DEGREE(WS-ENTRY-INDEX))
+                INTO WS-MESSAGE
+            END-STRING
+            PERFORM SHOW-TEXT
+            MOVE SPACES TO WS-MESSAGE
+            STRING "University: "
+                FUNCTION TRIM(
+                    WS-CURRENT-EDU-UNIVERSITY(WS-ENTRY-INDEX))
+                INTO WS-MESSAGE
+            END-STRING
+            PERFORM SHOW-TEXT
+            MOVE SPACES TO WS-MESSAGE
+            STRING "Years Attended: "
+                FUNCTION TRIM(WS-CURRENT-EDU-YEARS(WS-ENTRY-INDEX))
+                INTO WS-MESSAGE
+            END-STRING
+            PERFORM SHOW-TEXT
+        END-PERFORM
+    END-IF
 
     MOVE "--------------------"
         TO WS-MESSAGE
