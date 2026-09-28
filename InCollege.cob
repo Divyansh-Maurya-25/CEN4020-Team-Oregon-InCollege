@@ -16,6 +16,9 @@ FILE-CONTROL.
     SELECT OPTIONAL PROFILE-FILE ASSIGN TO "profiles.dat"
         ORGANIZATION IS LINE SEQUENTIAL
         FILE STATUS IS WS-PROFILE-STATUS.
+    SELECT OPTIONAL REQUEST-FILE ASSIGN TO "requests.dat"
+        ORGANIZATION IS LINE SEQUENTIAL
+        FILE STATUS IS WS-REQUEST-STATUS.
 
 DATA DIVISION.
 FILE SECTION.
@@ -23,14 +26,19 @@ FD INPUT-FILE.
 01 INPUT-RECORD PIC X(200).
 
 FD OUTPUT-FILE.
-01 OUTPUT-RECORD PIC X(200).
+01 OUTPUT-RECORD PIC X(300).
+
+FD REQUEST-FILE.
+01 REQUEST-RECORD.
+    05 REQUEST-SENDER PIC X(20).
+    05 REQUEST-RECIPIENT PIC X(20).
+    05 REQUEST-STATE PIC X.
 
 FD ACCOUNT-FILE.
 01 ACCOUNT-RECORD.
     05 ACCOUNT-RECORD-USERNAME PIC X(20).
     05 ACCOUNT-RECORD-PASSWORD-HASH PIC 9(10).
 
-*> Epic #2 profile persistence record.
 FD PROFILE-FILE.
 01 PROFILE-RECORD.
     05 PR-USERNAME PIC X(20).
@@ -55,6 +63,25 @@ FD PROFILE-FILE.
             15 PR-EDU-YEARS PIC X(20).
 
 WORKING-STORAGE SECTION.
+01 WS-REQUEST-STATUS PIC XX VALUE SPACES.
+01 WS-REQUESTS-OK PIC X VALUE "Y".
+01 WS-END-REQUESTS PIC X VALUE "N".
+01 WS-REQUEST-COUNT PIC 99 VALUE 0.
+01 WS-REQUEST-INDEX PIC 99 VALUE 0.
+01 WS-REQUEST-CHOICE PIC X VALUE SPACE.
+01 WS-REQUEST-MENU-DONE PIC X VALUE "N".
+01 WS-TARGET-USERNAME PIC X(20) VALUE SPACES.
+01 WS-TARGET-FOUND PIC X VALUE "N".
+01 WS-ALREADY-CONNECTED PIC X VALUE "N".
+01 WS-OUTGOING-REQUEST PIC X VALUE "N".
+01 WS-REVERSE-REQUEST PIC X VALUE "N".
+01 WS-PENDING-FOUND PIC X VALUE "N".
+01 WS-REQUESTS.
+    05 WS-REQUEST OCCURS 20 TIMES.
+        10 WS-REQUEST-SENDER PIC X(20).
+        10 WS-REQUEST-RECIPIENT PIC X(20).
+        10 WS-REQUEST-STATE PIC X.
+
 01 WS-INPUT-STATUS PIC XX VALUE SPACES.
 01 WS-ACCOUNT-STATUS PIC XX VALUE SPACES.
 01 WS-END-INPUT PIC X VALUE "N".
@@ -78,20 +105,12 @@ WORKING-STORAGE SECTION.
 01 WS-PASSWORD PIC X(12) VALUE SPACES.
 01 WS-PASSWORD-HASH PIC 9(10) VALUE 0.
 01 WS-HASH-ACCUM PIC 9(18) VALUE 0.
-01 WS-MESSAGE PIC X(200) VALUE SPACES.
+01 WS-MESSAGE PIC X(300) VALUE SPACES.
 01 WS-ACCOUNTS.
     05 WS-ACCOUNT OCCURS 5 TIMES.
         10 WS-SAVED-USERNAME PIC X(20).
         10 WS-SAVED-PASSWORD-HASH PIC 9(10).
 
-*> ================================================================
-*> Epic #2 - Divyansh assigned profile tasks
-*> - edit/load/save an existing profile
-*> - work experience OCCURS table + prompts + three-entry limit
-*> - education OCCURS table + prompts + three-entry limit
-*> - profile persistence linked by username
-*> - all prompts continue to use SHOW-TEXT for mirrored output
-*> ================================================================
 01 WS-PROFILE-STATUS PIC XX VALUE SPACES.
 01 WS-END-PROFILES PIC X VALUE "N".
 01 WS-PROFILE-COUNT PIC 9 VALUE 0.
@@ -103,9 +122,11 @@ WORKING-STORAGE SECTION.
 01 WS-PROFILE-VALID PIC X VALUE "N".
 01 WS-GRAD-YEAR-VALID PIC X VALUE "N".
 01 WS-GRAD-YEAR-LENGTH PIC 999 VALUE 0.
+01 WS-SEARCH-NAME PIC X(200) VALUE SPACES.
+01 WS-FULL-NAME PIC X(61) VALUE SPACES.
+01 WS-SEARCH-INDEX PIC 9 VALUE 0.
+01 WS-SEARCH-FOUND PIC X VALUE "N".
 
-*> In-memory saved profiles.  There can be at most five because
-*> Epic #1 permits at most five accounts.
 01 WS-PROFILES.
     05 WS-PROFILE OCCURS 5 TIMES.
         10 WS-PROFILE-USERNAME PIC X(20).
@@ -129,8 +150,7 @@ WORKING-STORAGE SECTION.
                 20 WS-PROFILE-EDU-UNIVERSITY PIC X(60).
                 20 WS-PROFILE-EDU-YEARS PIC X(20).
 
-*> Active profile buffer.  The logged-in user's profile is loaded
-*> here before editing, then copied back into WS-PROFILES on save.
+*> Profile being viewed or edited.
 01 WS-CURRENT-PROFILE.
     05 WS-CURRENT-PROFILE-USERNAME PIC X(20).
     05 WS-CURRENT-FIRST-NAME PIC X(30).
@@ -164,8 +184,8 @@ MAIN.
 
     OPEN OUTPUT OUTPUT-FILE
     PERFORM LOAD-ACCOUNTS
-    *> SCRUM-120: load saved profiles when the program starts.
     PERFORM LOAD-PROFILES
+    PERFORM LOAD-REQUESTS
 
     PERFORM UNTIL WS-END-INPUT = "Y"
         PERFORM SHOW-MENU
@@ -191,6 +211,7 @@ MAIN.
     CLOSE INPUT-FILE OUTPUT-FILE
     STOP RUN.
 
+*> Epic 1
 SHOW-MENU.
     MOVE "Welcome to InCollege!" TO WS-MESSAGE
     PERFORM SHOW-TEXT
@@ -294,16 +315,15 @@ POST-LOGIN-MENU.
                         TO WS-MESSAGE
                     PERFORM SHOW-TEXT
                 WHEN "4"
-                    MOVE "Find someone you know is under construction."
-                        TO WS-MESSAGE
-                    PERFORM SHOW-TEXT
+                    PERFORM SEARCH-FOR-USER
                 WHEN "5"
                     PERFORM SKILL-MENU
                 WHEN "6"
                     MOVE "Y" TO WS-LOGOUT
-                    MOVE "Y" TO WS-END-INPUT
+                WHEN "7"
+                    PERFORM VIEW-PENDING-REQUESTS
                 WHEN OTHER
-                    MOVE "Please enter a number from 1 to 6."
+                    MOVE "Please enter a number from 1 to 7."
                         TO WS-MESSAGE
                     PERFORM SHOW-TEXT
             END-EVALUATE
@@ -322,6 +342,8 @@ SHOW-POST-LOGIN-MENU.
     MOVE "5. Learn a New Skill" TO WS-MESSAGE
     PERFORM SHOW-TEXT
     MOVE "6. Logout" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    MOVE "7. View My Pending Connection Requests" TO WS-MESSAGE
     PERFORM SHOW-TEXT
     MOVE "Enter your choice:" TO WS-MESSAGE
     PERFORM SHOW-TEXT.
@@ -406,14 +428,8 @@ SAVE-ACCOUNT.
     CLOSE ACCOUNT-FILE.
 
 
-*> ================================================================
-*> Epic #2 profile procedures for Divyansh's assigned Jira tasks.
-*> These are intentionally modular so the teammates implementing the
-*> create/view/menu stories can call them without duplicating logic.
-*> ================================================================
-
+*> Epic 2
 LOAD-PROFILES.
-    *> SCRUM-120: load saved profiles at startup.
     MOVE 0 TO WS-PROFILE-COUNT
     MOVE "N" TO WS-END-PROFILES
     OPEN INPUT PROFILE-FILE
@@ -433,7 +449,6 @@ LOAD-PROFILES.
     END-IF.
 
 FIND-PROFILE-BY-USERNAME.
-    *> SCRUM-88 / SCRUM-118: profiles are linked to account username.
     MOVE "N" TO WS-PROFILE-FOUND
     MOVE 0 TO WS-CURRENT-PROFILE-INDEX
 
@@ -446,7 +461,6 @@ FIND-PROFILE-BY-USERNAME.
     END-PERFORM.
 
 LOAD-CURRENT-PROFILE.
-    *> SCRUM-88: load the logged-in user's current profile by username.
     PERFORM FIND-PROFILE-BY-USERNAME
 
     IF WS-PROFILE-FOUND = "Y"
@@ -458,10 +472,6 @@ LOAD-CURRENT-PROFILE.
     END-IF.
 
 SAVE-CURRENT-PROFILE.
-    *> SCRUM-89 / SCRUM-92 / SCRUM-119:
-    *> - an edited profile replaces the previous in-memory record
-    *> - a new profile is added if none exists yet
-    *> - username always links the profile to the logged-in account
     MOVE WS-USERNAME TO WS-CURRENT-PROFILE-USERNAME
     PERFORM FIND-PROFILE-BY-USERNAME
 
@@ -485,8 +495,6 @@ SAVE-CURRENT-PROFILE.
     END-IF.
 
 WRITE-ALL-PROFILES.
-    *> SCRUM-119: rewriting the sequential file makes edited records
-    *> replace their previous values while preserving the other users.
     OPEN OUTPUT PROFILE-FILE
 
     PERFORM VARYING WS-PROFILE-INDEX FROM 1 BY 1
@@ -498,8 +506,6 @@ WRITE-ALL-PROFILES.
     CLOSE PROFILE-FILE.
 
 EDIT-WORK-EXPERIENCE.
-    *> SCRUM-108 / SCRUM-109 / SCRUM-110.
-    *> Re-entering this section replaces the user's previous list.
     MOVE 0 TO WS-CURRENT-EXPERIENCE-COUNT
     INITIALIZE WS-CURRENT-EXPERIENCES
     MOVE "N" TO WS-ENTRY-STOP
@@ -581,8 +587,6 @@ EDIT-WORK-EXPERIENCE.
     END-IF.
 
 EDIT-EDUCATION.
-    *> SCRUM-113 / SCRUM-114 / SCRUM-115.
-    *> Re-entering this section replaces the user's previous list.
     MOVE 0 TO WS-CURRENT-EDUCATION-COUNT
     INITIALIZE WS-CURRENT-EDUCATION-ENTRIES
     MOVE "N" TO WS-ENTRY-STOP
@@ -649,8 +653,6 @@ EDIT-EDUCATION.
     END-IF.
 
 HASH-PASSWORD.
-    *> Epic #1 mentions storing a hashed password.  This is a simple
-    *> deterministic course-project hash, not production cryptography.
     MOVE 5381 TO WS-HASH-ACCUM
     COMPUTE WS-PASSWORD-LENGTH =
         FUNCTION LENGTH(FUNCTION TRIM(WS-PASSWORD))
@@ -842,6 +844,8 @@ VIEW-PROFILE.
     PERFORM LOAD-CURRENT-PROFILE
 
     IF WS-PROFILE-FOUND = "Y"
+        MOVE "--- Your Profile ---" TO WS-MESSAGE
+        PERFORM SHOW-TEXT
         PERFORM DISPLAY-PROFILE
     ELSE
         MOVE "No profile has been created for this user."
@@ -849,11 +853,72 @@ VIEW-PROFILE.
         PERFORM SHOW-TEXT
     END-IF.
 
-*> Display the current user's complete profile
-DISPLAY-PROFILE.
+*> Search the saved profiles for an exact first and last name.
+*> Epic 3
+SEARCH-FOR-USER.
+    PERFORM READ-SEARCH-NAME
 
-    MOVE "--- Your Profile ---"
+    IF WS-END-INPUT = "N"
+        PERFORM FIND-USER-BY-FULL-NAME
+        PERFORM DISPLAY-SEARCH-RESULT
+    END-IF.
+
+READ-SEARCH-NAME.
+    MOVE "Enter the full name of the person you are looking for:"
         TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    PERFORM READ-INPUT
+
+    IF WS-END-INPUT = "N"
+        MOVE INPUT-RECORD TO WS-SEARCH-NAME
+    END-IF.
+
+FIND-USER-BY-FULL-NAME.
+    MOVE "N" TO WS-SEARCH-FOUND
+    MOVE 0 TO WS-SEARCH-INDEX
+
+    PERFORM VARYING WS-SEARCH-INDEX FROM 1 BY 1
+        UNTIL WS-SEARCH-INDEX > WS-PROFILE-COUNT
+            OR WS-SEARCH-FOUND = "Y"
+        MOVE SPACES TO WS-FULL-NAME
+        STRING
+            FUNCTION TRIM(
+                WS-PROFILE-FIRST-NAME(WS-SEARCH-INDEX))
+            " "
+            FUNCTION TRIM(
+                WS-PROFILE-LAST-NAME(WS-SEARCH-INDEX))
+            INTO WS-FULL-NAME
+        END-STRING
+
+        IF WS-SEARCH-NAME = WS-FULL-NAME
+            MOVE "Y" TO WS-SEARCH-FOUND
+            MOVE WS-PROFILE(WS-SEARCH-INDEX)
+                TO WS-CURRENT-PROFILE
+        END-IF
+    END-PERFORM.
+
+DISPLAY-SEARCH-RESULT.
+    IF WS-SEARCH-FOUND = "Y"
+        MOVE "--- Found User Profile ---" TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+        PERFORM DISPLAY-PROFILE
+        MOVE WS-CURRENT-PROFILE-USERNAME TO WS-TARGET-USERNAME
+        PERFORM CONNECTION-REQUEST-MENU
+    ELSE
+        MOVE "No one by that name could be found."
+            TO WS-MESSAGE
+        PERFORM SHOW-TEXT
+    END-IF.
+
+*> Both menus use the same formatting for a complete profile.
+DISPLAY-PROFILE.
+    STRING
+        "==== Profile for "
+        FUNCTION TRIM(WS-CURRENT-FIRST-NAME)
+        " "
+        FUNCTION TRIM(WS-CURRENT-LAST-NAME)
+        INTO WS-MESSAGE
+    END-STRING
     PERFORM SHOW-TEXT
 
     STRING
@@ -895,58 +960,85 @@ DISPLAY-PROFILE.
         PERFORM SHOW-TEXT
     END-IF
 
-    PERFORM VARYING WS-ENTRY-INDEX FROM 1 BY 1
-        UNTIL WS-ENTRY-INDEX > WS-CURRENT-EXPERIENCE-COUNT
-        MOVE SPACES TO WS-MESSAGE
-        STRING
-            "Experience #" WS-ENTRY-INDEX ": "
-            FUNCTION TRIM(WS-CURRENT-EXP-TITLE(WS-ENTRY-INDEX))
-            " at "
-            FUNCTION TRIM(WS-CURRENT-EXP-COMPANY(WS-ENTRY-INDEX))
-            INTO WS-MESSAGE
-        END-STRING
+    MOVE "Experience:" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    IF WS-CURRENT-EXPERIENCE-COUNT = 0
+        MOVE "None" TO WS-MESSAGE
         PERFORM SHOW-TEXT
-
-        MOVE SPACES TO WS-MESSAGE
-        STRING
-            "Dates: "
-            FUNCTION TRIM(WS-CURRENT-EXP-DATES(WS-ENTRY-INDEX))
-            INTO WS-MESSAGE
-        END-STRING
-        PERFORM SHOW-TEXT
-
-        IF WS-CURRENT-EXP-DESCRIPTION(WS-ENTRY-INDEX) NOT = SPACES
+    ELSE
+        PERFORM VARYING WS-ENTRY-INDEX FROM 1 BY 1
+            UNTIL WS-ENTRY-INDEX > WS-CURRENT-EXPERIENCE-COUNT
             MOVE SPACES TO WS-MESSAGE
             STRING
-                "Description: "
-                FUNCTION TRIM(
-                    WS-CURRENT-EXP-DESCRIPTION(WS-ENTRY-INDEX))
+                "Experience #" WS-ENTRY-INDEX
                 INTO WS-MESSAGE
             END-STRING
             PERFORM SHOW-TEXT
-        END-IF
-    END-PERFORM
+            MOVE SPACES TO WS-MESSAGE
+            STRING "Title: "
+                FUNCTION TRIM(WS-CURRENT-EXP-TITLE(WS-ENTRY-INDEX))
+                INTO WS-MESSAGE
+            END-STRING
+            PERFORM SHOW-TEXT
+            MOVE SPACES TO WS-MESSAGE
+            STRING "Company: "
+                FUNCTION TRIM(WS-CURRENT-EXP-COMPANY(WS-ENTRY-INDEX))
+                INTO WS-MESSAGE
+            END-STRING
+            PERFORM SHOW-TEXT
+            MOVE SPACES TO WS-MESSAGE
+            STRING "Dates: "
+                FUNCTION TRIM(WS-CURRENT-EXP-DATES(WS-ENTRY-INDEX))
+                INTO WS-MESSAGE
+            END-STRING
+            PERFORM SHOW-TEXT
+            IF WS-CURRENT-EXP-DESCRIPTION(WS-ENTRY-INDEX)
+                NOT = SPACES
+                MOVE SPACES TO WS-MESSAGE
+                STRING "Description: "
+                    FUNCTION TRIM(
+                        WS-CURRENT-EXP-DESCRIPTION(WS-ENTRY-INDEX))
+                    INTO WS-MESSAGE
+                END-STRING
+                PERFORM SHOW-TEXT
+            END-IF
+        END-PERFORM
+    END-IF
 
-    PERFORM VARYING WS-ENTRY-INDEX FROM 1 BY 1
-        UNTIL WS-ENTRY-INDEX > WS-CURRENT-EDUCATION-COUNT
-        MOVE SPACES TO WS-MESSAGE
-        STRING
-            "Education #" WS-ENTRY-INDEX ": "
-            FUNCTION TRIM(WS-CURRENT-EDU-DEGREE(WS-ENTRY-INDEX))
-            " - "
-            FUNCTION TRIM(WS-CURRENT-EDU-UNIVERSITY(WS-ENTRY-INDEX))
-            INTO WS-MESSAGE
-        END-STRING
+    MOVE "Education:" TO WS-MESSAGE
+    PERFORM SHOW-TEXT
+    IF WS-CURRENT-EDUCATION-COUNT = 0
+        MOVE "None" TO WS-MESSAGE
         PERFORM SHOW-TEXT
-
-        MOVE SPACES TO WS-MESSAGE
-        STRING
-            "Years Attended: "
-            FUNCTION TRIM(WS-CURRENT-EDU-YEARS(WS-ENTRY-INDEX))
-            INTO WS-MESSAGE
-        END-STRING
-        PERFORM SHOW-TEXT
-    END-PERFORM
+    ELSE
+        PERFORM VARYING WS-ENTRY-INDEX FROM 1 BY 1
+            UNTIL WS-ENTRY-INDEX > WS-CURRENT-EDUCATION-COUNT
+            MOVE SPACES TO WS-MESSAGE
+            STRING "Education #" WS-ENTRY-INDEX
+                INTO WS-MESSAGE
+            END-STRING
+            PERFORM SHOW-TEXT
+            MOVE SPACES TO WS-MESSAGE
+            STRING "Degree: "
+                FUNCTION TRIM(WS-CURRENT-EDU-DEGREE(WS-ENTRY-INDEX))
+                INTO WS-MESSAGE
+            END-STRING
+            PERFORM SHOW-TEXT
+            MOVE SPACES TO WS-MESSAGE
+            STRING "University: "
+                FUNCTION TRIM(
+                    WS-CURRENT-EDU-UNIVERSITY(WS-ENTRY-INDEX))
+                INTO WS-MESSAGE
+            END-STRING
+            PERFORM SHOW-TEXT
+            MOVE SPACES TO WS-MESSAGE
+            STRING "Years Attended: "
+                FUNCTION TRIM(WS-CURRENT-EDU-YEARS(WS-ENTRY-INDEX))
+                INTO WS-MESSAGE
+            END-STRING
+            PERFORM SHOW-TEXT
+        END-PERFORM
+    END-IF
 
     MOVE "--------------------"
         TO WS-MESSAGE
@@ -1014,3 +1106,7 @@ VALIDATE-GRAD-YEAR.
             MOVE "Y" TO WS-GRAD-YEAR-VALID
         END-IF
     END-IF.
+
+*> Epic 4
+COPY "SendRequest.cob".
+COPY "ViewRequests.cob".
