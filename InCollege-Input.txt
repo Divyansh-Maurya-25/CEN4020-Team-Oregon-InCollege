@@ -1,24 +1,73 @@
 2
 allen
 GoodPass1!
+2
+lucas
+GoodPass1!
+2
+sam
+GoodPass1!
 1
 allen
 GoodPass1!
 1
-John
-Doe
+Allen
+Nguyen
 University of South Florida
 Computer Science
 2027
-I am a computer science student.
-Software Intern
-Example Company
-May 2026 - August 2026
-Built software features.
+
 DONE
-Bachelor of Science in Computer Science
+DONE
+6
+1
+lucas
+GoodPass1!
+1
+Lucas
+Montanaro
 University of South Florida
-2024 - 2027
+Computer Science
+2027
+
 DONE
-2
+DONE
+6
+1
+sam
+GoodPass1!
+1
+Sam
+Lee
+University of South Florida
+Computer Science
+2027
+
+DONE
+DONE
+6
+1
+allen
+GoodPass1!
+4
+Lucas Montanaro
+1
+4
+Lucas Montanaro
+1
+6
+1
+sam
+GoodPass1!
+4
+Lucas Montanaro
+1
+6
+1
+lucas
+GoodPass1!
+7
+4
+Allen Nguyen
+1
 6
